@@ -19,7 +19,7 @@ class ApiTestCase(unittest.TestCase):
 		}
 		self.shoppinglist = {
 		'owner_id': '1',
-		'title': 'My favorite meal',
+		'title': "My favorite meal",
 		'description': 'Items to cook my favorite meal'
 		}
 
@@ -36,9 +36,14 @@ class ApiTestCase(unittest.TestCase):
             'password': password
         }
 		return self.client().post('/auth/login', data=user_data)
+	def access_token(self):
+		res = self.login_user()
+		access_token = json.loads(res.data.decode())
+		token = "Bearer " + access_token['token']
+		return token
 
 	def test_user_creation(self):
-		"""Ensure we can create a user"""
+		"""Test we can create a user"""
 		response = self.register_user()
 		self.assertEqual(response.status_code, 201)
 		self.assertIn("User account created successfuly", str(response.data))
@@ -53,39 +58,109 @@ class ApiTestCase(unittest.TestCase):
 	def test_create_shoppinglist(self):
 		"""Test user can create a shoppinglist"""
 		self.register_user()
-		res = self.login_user()
-		access_token = json.loads(res.data.decode())
 		response = self.client().post(
 			'/shoppinglists',
-			headers=dict(Authorization="Bearer " + access_token['token']),
+			headers=dict(Authorization=self.access_token()),
 			data=self.shoppinglist
 		)
 		self.assertTrue('My favorite meal' in str(response.data))
 		self.assertEqual(201, response.status_code)
+	def test_invalid_shoppinglists(self):
+		"""Test user can't create mal formatted shoppinglists"""
+		self.register_user()
+		response1 = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': 666666,
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		response2 = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': "Nyamameat",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		response3 = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': "",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		self.assertIn(b'Value can\'t be numbers', response1.data)
+		self.assertEqual(202, response1.status_code)
+		self.assertIn(b'Value should be more than 10 characters', response2.data)
+		self.assertEqual(202, response2.status_code)
+		self.assertIn(b'Value can\'t be empty', response3.data)
+		self.assertEqual(202, response3.status_code)
 
-	def test_create_duplicate_list(self):
+	def test_duplicate_shoppinglist(self):
 		"""Test user can't create two similar shoppinglists"""
 		self.register_user()
-		res = self.login_user()
-		access_token = json.loads(res.data.decode())
+		access_token = self.access_token()
 		self.client().post(
 			'/shoppinglists',
-			headers=dict(Authorization="Bearer " + access_token['token']),
+			headers=dict(Authorization=access_token),
 			data=self.shoppinglist
 		)
 		response = self.client().post(
 			'/shoppinglists',
-			headers=dict(Authorization="Bearer " + access_token['token']),
+			headers=dict(Authorization=access_token),
 			data=self.shoppinglist
 		)
 		self.assertIn(b'Shopping List My favorite meal already exists', response.data)
 		self.assertEqual(response.status_code, 202)
 		
-	def test_valid_shoppinglist_data(self):
-		"""Test user is entering valid shopping lists"""
-		pass
+	def test_fetch_all_shoppinglists(self):
+		"""Test user is able to display all shopping lists"""
+		self.register_user()
+		access_token = self.access_token()
+		response1 = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(response1.status_code, 201)
+		response = self.client().get(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token)
+		)
+		self.assertEqual(response.status_code, 202)
+		self.assertIn('My favorite meal', str(response.data))
 
-	# def test:
+	def test_fetch_single_shoppinglist(self):
+		"""Test user is able to display a single shopping lists"""
+		self.register_user()
+		access_token = self.access_token()
+		self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data={
+		'owner_id': '1',
+		'title': "My favorito passito rite meal",
+		'description': 'Items to cookfavorite meal'
+		}
+		)
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(response.status_code, 201)
+		results = json.loads(response.data.decode())
+		get_single_sl = self.client().get(
+			'/shoppinglists/id',
+			headers=dict(Authorization=access_token)
+		)
+
 
 
 	def tearDown(self):

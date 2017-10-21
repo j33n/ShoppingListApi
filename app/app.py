@@ -107,14 +107,25 @@ def create_app(config_name):
 	    }
 		return response, 401
 
-	def validate_data(data, kind):
-		if kind is 'shoppinglist':
-			return 'shoppinglist'
+	def is_valid(value, min_length, _type):
+		message = []
+		if len(value) != 0:
+			if _type is 'text':
+				if not value.isdigit():
+					if len(value) < min_length:
+						message.append("Value should be more than {} characters".format(min_length))
+						return message
+					return True
+				message.append("Value can't be numbers")
+				return message
+		message.append("Value can't be empty")
+		return message
 		
 	class CreateShoppingList(Resource):
 
 		def get(self):
 			user_id = middleware()
+			
 			if not isinstance(user_id, str):
 				shoppinglists = ShoppingList.query.filter_by(owner_id=user_id)
 				results = []
@@ -128,7 +139,10 @@ def create_app(config_name):
                         'owner_id': shoppinglist.owner_id
                     }
 					results.append(obj)
-				return jsonify(results)
+
+				response = jsonify(results)
+				response.status_code = 202
+				return response
 			else:
                 # Return token error message
 				response = {
@@ -142,32 +156,40 @@ def create_app(config_name):
 			args = parser.parse_args()
 			title = args['title']
 			description = args['description']
-			user_id = middleware()
-			if not isinstance(user_id, str):
-				check_exists = ShoppingList.query.filter_by(title=title).first()
-				if check_exists is None:
-					shoppinglist = ShoppingList(title=title, description=description, owner_id=user_id)
-					shoppinglist.save_shoppinglist()
-					# Return Response
+			valid_title = is_valid(value=title, min_length=10, _type="text")
+			valid_description = is_valid(value=description, min_length=10, _type="text")
+			# print(valid_description)
+			if valid_title is True and valid_description:
+				user_id = middleware()
+				if not isinstance(user_id, str):
+					check_exists = ShoppingList.query.filter_by(title=title).first()
+					if check_exists is None:
+						shoppinglist = ShoppingList(title=title, description=description, owner_id=user_id)
+						shoppinglist.save_shoppinglist()
+						# Return Response
+						response = {
+							'id': shoppinglist.id,
+							'owner': shoppinglist.owner_id,
+							'title': shoppinglist.title,
+							'description': shoppinglist.description,
+							'message': 'Shopping List created successfuly'
+						}
+						return response, 201
 					response = {
-						'id': shoppinglist.id,
-						'owner': shoppinglist.owner_id,
-						'title': shoppinglist.title,
-						'description': shoppinglist.description,
-						'message': 'Shopping List created successfuly'
+						'message': 'Shopping List {} already exists'.format(title)
 					}
-					return response, 201
-				response = {
-					'message': 'Shopping List {} already exists'.format(title)
-				}
-				return response, 202
-			response = jsonify({
-				'message': user_id
-			})
-			return response
+					return response, 202
+				response = jsonify({
+					'message': user_id
+				})
+				return response
+			response = {
+				'message': valid_title
+			}
+			return response, 202
+			
 	
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
 	api.add_resource(CreateShoppingList, '/shoppinglists')
-	# api.add_resource(TodoSimple, '/<string:todo_id>')
 	return app
