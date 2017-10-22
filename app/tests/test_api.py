@@ -140,15 +140,6 @@ class ApiTestCase(unittest.TestCase):
 		"""Test user is able to display a single shopping lists"""
 		self.register_user()
 		access_token = self.access_token()
-		self.client().post(
-			'/shoppinglists',
-			headers=dict(Authorization=access_token),
-			data={
-		'owner_id': '1',
-		'title': "My favorito passito rite meal",
-		'description': 'Items to cookfavorite meal'
-		}
-		)
 		response = self.client().post(
 			'/shoppinglists',
 			headers=dict(Authorization=access_token),
@@ -157,9 +148,46 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(response.status_code, 201)
 		results = json.loads(response.data.decode())
 		get_single_sl = self.client().get(
-			'/shoppinglists/id',
+			'/shoppinglist/{0}'.format(results['id']),
 			headers=dict(Authorization=access_token)
 		)
+		self.assertIn(b"My favorite meal", get_single_sl.data)
+		self.assertEqual(get_single_sl.status_code, 201)
+
+	def test_non_existent_shoppinglist(self):
+		"""Test user can't access non existent shoppinglist"""
+		self.register_user()
+		access_token = self.access_token()
+		response = self.client().get(
+			'/shoppinglist/1',
+			headers=dict(Authorization=access_token)
+		)
+		self.assertIn(b"Requested value '1' was not found", response.data)
+		self.assertEqual(response.status_code, 202)
+
+	def test_update_shoppinglist(self):
+		"""Test a user can update a shopping list"""
+		self.register_user()
+		access_token = self.access_token()
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(201, response.status_code)
+		results = json.loads(response.data.decode())
+		update_resp = self.client().put(
+			'/shoppinglist/{0}'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data={
+				'owner_id': '1',
+				'title': "My favorite shoes",
+				'description': 'Converse and Jordan 2015'
+			}
+		)
+		self.assertTrue("Converse and Jordan 2015" in update_resp.data)
+		self.assertEqual(update_resp.status_code, 201)
+
 
 
 

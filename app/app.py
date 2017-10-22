@@ -121,7 +121,7 @@ def create_app(config_name):
 		message.append("Value can't be empty")
 		return message
 		
-	class CreateShoppingList(Resource):
+	class ShoppingListAPI(Resource):
 
 		def get(self):
 			user_id = middleware()
@@ -187,9 +187,34 @@ def create_app(config_name):
 				'message': valid_title
 			}
 			return response, 202
-			
+
+
+	class SingleShoppingListAPI(Resource):
+
+		def get(self, shoppinglist_id):
+			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
+			print(shoppinglist)
+			if shoppinglist:
+				response = {
+					'id': shoppinglist.id,
+					'owner': shoppinglist.owner_id,
+					'title': shoppinglist.title,
+					'description': shoppinglist.description,
+					'message': 'success'
+				}
+				return response, 201
+			response = {
+				'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
+			}
+			return response, 202
+
+		def put(self, shoppinglist_id):
+			pass
+		def delete(self):
+			pass
 	
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
-	api.add_resource(CreateShoppingList, '/shoppinglists')
+	api.add_resource(ShoppingListAPI, '/shoppinglists')
+	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
 	return app
