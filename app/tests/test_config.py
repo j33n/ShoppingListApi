@@ -17,7 +17,7 @@ class TestDevelopmentConfig(unittest.TestCase):
         )
         self.assertTrue(
            app.config['SQLALCHEMY_DATABASE_URI'] ==
-                'postgresql://postgres:postgres@localhost/shoppinglist'
+                'postgresql://postgres:test_user@localhost/shoppinglist'
         )
 
 
@@ -29,7 +29,7 @@ class TestTestingConfig(unittest.TestCase):
         self.assertTrue(app.config['TESTING'] is True)
         self.assertTrue(
            app.config['SQLALCHEMY_DATABASE_URI'] ==
-                'postgresql://postgres:postgres@localhost/shoppinglist_test'
+                'postgresql://postgres:test_user@localhost/shoppinglist_test'
         )
 
 
