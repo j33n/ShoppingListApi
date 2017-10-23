@@ -37,6 +37,7 @@ class ProductionConfig(Config):
 
     DEBUG = False
     TESTING = False
+    SQLALCHEMY_DATABASE_URI = postgres_local_database
 
 app_config = {
     'development': DevelopmentConfig,
