@@ -20,7 +20,7 @@ class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
     BCRYPT_LOG_ROUNDS = 4
-    SQLALCHEMY_DATABASE_URI = postgres_local_database
+    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:postgres@localhost/shoppinglist"
 
 class TestingConfig(Config):
     """Testing configurations"""
