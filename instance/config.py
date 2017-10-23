@@ -30,7 +30,7 @@ class TestingConfig(Config):
     DEBUG = True
     TESTING = True
     BCRYPT_LOG_ROUNDS = 4
-    SQLALCHEMY_DATABASE_URI = str(postgres_local_database) + '_test'
+    SQLALCHEMY_DATABASE_URI = postgres_local_database+"{}".format('_test')
 
 class ProductionConfig(Config):
     """Testing configurations"""
