@@ -118,3 +118,38 @@ class ShoppingList(db.Model):
 
     def __repr__(self):
         return '<title {}'.format(self.title)
+
+class ShoppingListItem(db.Model):
+    """Model for Shopping Lists"""
+    __tablename__ = 'shoppinglistitems'
+
+    item_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    owner_id = db.Column(db.Integer, nullable=False)
+    shoppinglist_id = db.Column(db.Integer, nullable=False)
+    item_title = db.Column(db.String(255), nullable=False, unique=True)
+    item_description = db.Column(db.String(500), nullable=False)
+    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
+    date_modified = db.Column(
+        db.DateTime, default=db.func.current_timestamp(),
+        onupdate=db.func.current_timestamp())
+
+    def __init__(self, owner_id, shoppinglist_id, item_title, item_description):
+        self.owner_id = owner_id
+        self.shoppinglist_id = shoppinglist_id
+        self.item_title = item_title
+        self.item_description = item_description
+
+    def save_shoppinglistitem(self):
+        db.session.add(self)
+        db.session.commit()
+
+    @staticmethod
+    def get_all_shoppinglistitems():
+        return ShoppingListItem.query.all()
+
+    def delete_shoppinglistitem(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def __repr__(self):
+        return '<title {}'.format(self.item_title)

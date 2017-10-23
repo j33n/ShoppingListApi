@@ -1,4 +1,5 @@
 import datetime
+from functools import wraps
 from flask import Flask, request, jsonify, make_response, json
 from flask_restful import reqparse, abort, Api, Resource
 from flask_sqlalchemy import SQLAlchemy
@@ -17,7 +18,7 @@ JWT_EXP_DELTA_SECONDS = 20
 
 
 def create_app(config_name):
-	from app.models import Users, ShoppingList
+	from app.models import Users, ShoppingList, ShoppingListItem
 	app = Flask(__name__, instance_relative_config=True)
 	api = Api(app)
 	bcrypt = Bcrypt(app)
@@ -26,9 +27,8 @@ def create_app(config_name):
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	db.init_app(app)
 
-	parser = reqparse.RequestParser()	
+	parser = reqparse.RequestParser()
 
-	
 	class Register(Resource):
 		"""Register a user account"""
 
@@ -158,7 +158,6 @@ def create_app(config_name):
 			description = args['description']
 			valid_title = is_valid(value=title, min_length=10, _type="text")
 			valid_description = is_valid(value=description, min_length=10, _type="text")
-			# print(valid_description)
 			if valid_title is True and valid_description:
 				user_id = middleware()
 				if not isinstance(user_id, str):
@@ -193,7 +192,6 @@ def create_app(config_name):
 
 		def get(self, shoppinglist_id):
 			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
-			print(shoppinglist)
 			if shoppinglist:
 				response = {
 					'id': shoppinglist.id,
@@ -209,12 +207,126 @@ def create_app(config_name):
 			return response, 202
 
 		def put(self, shoppinglist_id):
-			pass
-		def delete(self):
-			pass
+			post_data = ['title', 'description']
+			for arg in range(len(post_data)):
+				parser.add_argument(post_data[arg])
+			args = parser.parse_args()
+			title = args['title']
+			description = args['description']
+			valid_title = is_valid(value=title, min_length=10, _type="text")
+			valid_description = is_valid(value=description, min_length=10, _type="text")
+			if valid_title is True and valid_description:
+				user_id = middleware()
+				if not isinstance(user_id, str):
+					check_exists = ShoppingList.query.filter_by(title=title).first()
+					if check_exists is None:
+						shoppinglist = ShoppingList(title=title, description=description, owner_id=user_id)
+						shoppinglist.save_shoppinglist()
+						# Return Response
+						response = {
+							'id': shoppinglist.id,
+							'owner': shoppinglist.owner_id,
+							'title': shoppinglist.title,
+							'description': shoppinglist.description,
+							'message': 'Shopping List updated successfuly'
+						}
+						return response, 201
+					response = {
+						'message': 'Shopping List {} already exists'.format(title)
+					}
+					return response, 202
+				response = jsonify({
+					'message': user_id
+				})
+				return response
+			response = {
+				'message': valid_title
+			}
+			return response, 202
+
+		def delete(self, shoppinglist_id):
+			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
+			if shoppinglist:
+				shoppinglist.delete_shoppinglist()
+				response = {
+					'message': 'Shopping List \'{}\' deleted successfuly'.format(shoppinglist.title)
+				}
+				return response, 201
+			response = {
+				'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
+			}
+			return response, 202
+
+	class ShoppingListItemsAPI(Resource):
+
+		def get(self):
+			user_id = middleware()
+			
+			if not isinstance(user_id, str):
+				shoppinglists = ShoppingList.query.filter_by(owner_id=user_id)
+				results = []
+				for shoppinglist in shoppinglists:
+					obj = {
+						'id': shoppinglist.id,
+                        'title': shoppinglist.title,
+                        'description': shoppinglist.description,
+                        'date_created': shoppinglist.date_created,
+                        'date_modified': shoppinglist.date_modified,
+                        'owner_id': shoppinglist.owner_id
+                    }
+					results.append(obj)
+
+				response = jsonify(results)
+				response.status_code = 202
+				return response
+			else:
+                # Return token error message
+				response = {
+                    'message': user_id
+                }
+				return response, 401
+		def post(self, shoppinglist_id):
+			post_data = ['item_title', 'item_description']
+			for arg in range(len(post_data)):
+				parser.add_argument(post_data[arg])
+			args = parser.parse_args()
+			item_title = args['item_title']
+			item_description = args['item_description']
+			valid_item_title = is_valid(value=item_title, min_length=10, _type="text")
+			valid_item_description = is_valid(value=item_description, min_length=10, _type="text")
+			if valid_item_title is True and valid_item_description:
+				user_id = middleware()
+				if not isinstance(user_id, str):
+					check_exists = ShoppingListItem.query.filter_by(item_title=item_title).first()
+					if check_exists is None:
+						shoppinglistitem = ShoppingListItem(item_title=item_title, item_description=item_description, shoppinglist_id=shoppinglist_id, owner_id=user_id)
+						shoppinglistitem.save_shoppinglistitem()
+						# Return Response
+						response = {
+							'item_id': shoppinglistitem.item_id,
+							'owner_id': shoppinglistitem.owner_id,
+							'shoppinglist_id': shoppinglistitem.shoppinglist_id,
+							'item_title': shoppinglistitem.item_title,
+							'item_description': shoppinglistitem.item_description,
+							'message': 'Shopping List created successfuly'
+						}
+						return response, 201
+					response = {
+						'message': 'Shopping List item {} already exists'.format(item_title)
+					}
+					return response, 202
+				response = jsonify({
+					'message': user_id
+				})
+				return response
+			response = {
+				'message': valid_item_title
+			}
+			return response, 202
 	
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
 	api.add_resource(ShoppingListAPI, '/shoppinglists')
 	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
+	api.add_resource(ShoppingListItemsAPI, '/shoppinglist/<int:shoppinglist_id>/items', endpoint='shoppinglistitems')
 	return app

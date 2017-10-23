@@ -22,6 +22,12 @@ class ApiTestCase(unittest.TestCase):
 		'title': "My favorite meal",
 		'description': 'Items to cook my favorite meal'
 		}
+		self.shoppinglistitem = {
+		'owner_id': '1',
+		'shoppinglist_id': '1',
+		'item_title': "Vegatables",
+		'item_description': 'Carrots and Cabbages'
+		}
 
 		with self.app.app_context():
 			# create all tables
@@ -185,9 +191,134 @@ class ApiTestCase(unittest.TestCase):
 				'description': 'Converse and Jordan 2015'
 			}
 		)
-		self.assertTrue("Converse and Jordan 2015" in update_resp.data)
+		self.assertTrue(b"Converse and Jordan 2015" in update_resp.data)
+		self.assertTrue(b"Shopping List updated successfuly" in update_resp.data)
 		self.assertEqual(update_resp.status_code, 201)
 
+	def test_invalid_data_update(self):
+		"""Test user can't update with invalid format title or description"""
+		self.register_user()
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=self.access_token()),
+			data=self.shoppinglist
+		)
+		self.assertTrue(response.status_code, 201)
+		response1 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': 666666,
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		response2 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': "Nyamameat",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		response3 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': "",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		self.assertIn(b'Value can\'t be numbers', response1.data)
+		self.assertEqual(202, response1.status_code)
+		self.assertIn(b'Value should be more than 10 characters', response2.data)
+		self.assertEqual(202, response2.status_code)
+		self.assertIn(b'Value can\'t be empty', response3.data)
+		self.assertEqual(202, response3.status_code)
+
+
+	def test_delete_shoppinglist(self):
+		"""Test a user can delete a shopping list"""
+		self.register_user()
+		access_token = self.access_token()
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(201, response.status_code)
+		results = json.loads(response.data.decode())
+		update_resp = self.client().delete(
+			'/shoppinglist/{0}'.format(results['id']),
+			headers=dict(Authorization=access_token)
+		)
+		self.assertFalse(b"Items to cook my favorite meal" in update_resp.data)
+		self.assertIn(b"Shopping List \'My favorite meal\' deleted successfuly", update_resp.data)
+		self.assertEqual(update_resp.status_code, 201)
+
+	def test_add_shoppinglistitem(self):
+		"""Test a user can add an item to shoppinglist"""
+		self.register_user()
+		access_token = self.access_token()
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(response.status_code, 201)
+		results = json.loads(response.data.decode())
+		create_item = self.client().post(
+			'/shoppinglist/{0}/items'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglistitem
+		)
+		self.assertIn(b'Vegatables', create_item.data)
+		self.assertEqual(201, create_item.status_code)
+
+	def test_invalid_item_value(self):
+		"""Test user can't update with invalid format title or description"""
+		self.register_user()
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=self.access_token()),
+			data=self.shoppinglist
+		)
+		self.assertTrue(response.status_code, 201)
+		response1 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': 666666,
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		response2 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': "Nyamameat",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		response3 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'title': "",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		self.assertIn(b'Value can\'t be numbers', response1.data)
+		self.assertEqual(202, response1.status_code)
+		self.assertIn(b'Value should be more than 10 characters', response2.data)
+		self.assertEqual(202, response2.status_code)
+		self.assertIn(b'Value can\'t be empty', response3.data)
+		self.assertEqual(202, response3.status_code)
 
 
 
