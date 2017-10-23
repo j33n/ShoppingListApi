@@ -33,7 +33,7 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = postgres_local_database+"{}".format('_test')
 
 class ProductionConfig(Config):
-    """Testing configurations"""
+    """Production configurations"""
 
     DEBUG = False
     TESTING = False

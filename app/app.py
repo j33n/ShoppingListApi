@@ -29,6 +29,13 @@ def create_app(config_name):
 
 	parser = reqparse.RequestParser()
 
+
+	class Home(Resource):
+		def get(self):
+			response = {'message': "Welcome to Shopping List API"}
+			return response, 200
+
+	
 	class Register(Resource):
 		"""Register a user account"""
 
@@ -399,6 +406,7 @@ def create_app(config_name):
 			}
 			return response, 202
 	
+	api.add_resource(Home, '/')
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
 	api.add_resource(ShoppingListAPI, '/shoppinglists')
