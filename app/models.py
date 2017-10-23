@@ -152,4 +152,4 @@ class ShoppingListItem(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<title {}'.format(self.item_title)
+        return '<item_title {}'.format(self.item_title)

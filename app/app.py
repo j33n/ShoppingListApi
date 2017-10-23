@@ -361,15 +361,16 @@ def create_app(config_name):
 				if not isinstance(user_id, str):
 					check_exists = ShoppingListItem.query.filter_by(item_title=item_title).first()
 					if check_exists is None:
-						shoppinglistitem = ShoppingListItem(item_title=item_title, item_description=item_description, owner_id=user_id)
+						shoppinglistitem = ShoppingListItem(item_title=item_title, item_description=item_description, owner_id=user_id, shoppinglist_id=shoppinglist_id)
 						shoppinglistitem.save_shoppinglistitem()
 						# Return Response
 						response = {
 							'item_id': shoppinglistitem.item_id,
 							'owner': shoppinglistitem.owner_id,
+							'shoppinglist_id': shoppinglistitem.shoppinglist_id,
 							'item_title': shoppinglistitem.item_title,
 							'item_description': shoppinglistitem.item_description,
-							'message': 'Shopping List updated successfuly'
+							'message': 'Shopping list item updated successfuly'
 						}
 						return response, 201
 					response = {
@@ -385,16 +386,16 @@ def create_app(config_name):
 			}
 			return response, 202
 
-		def delete(self, shoppinglist_id):
-			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
-			if shoppinglist:
-				shoppinglist.delete_shoppinglist()
+		def delete(self, shoppinglist_id, shoppinglistitem_id):
+			shoppinglistitem = ShoppingListItem.query.filter_by(item_id=shoppinglistitem_id, shoppinglist_id=shoppinglist_id).first()
+			if shoppinglistitem:
+				shoppinglistitem.delete_shoppinglistitem()
 				response = {
-					'message': 'Shopping List \'{}\' deleted successfuly'.format(shoppinglist.title)
+					'message': 'Shopping list item \'{}\' deleted successfuly'.format(shoppinglistitem.item_title)
 				}
 				return response, 201
 			response = {
-				'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
+				'message': 'Requested value \'{}\' was not found'.format(shoppinglistitem_id)
 			}
 			return response, 202
 	

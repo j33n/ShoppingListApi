@@ -25,7 +25,7 @@ class ApiTestCase(unittest.TestCase):
 		self.shoppinglistitem = {
 		'owner_id': '1',
 		'shoppinglist_id': '1',
-		'item_title': "Vegatables",
+		'item_title': "Vegetables",
 		'item_description': 'Carrots and Cabbages'
 		}
 
@@ -274,7 +274,7 @@ class ApiTestCase(unittest.TestCase):
 			headers=dict(Authorization=access_token),
 			data=self.shoppinglistitem
 		)
-		self.assertIn(b'Vegatables', create_item.data)
+		self.assertIn(b'Vegetables', create_item.data)
 		self.assertEqual(201, create_item.status_code)
 
 	def test_invalid_item_value(self):
@@ -347,7 +347,7 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(get_items.status_code, 202)
 		self.assertIn('Carrots and Cabbages', str(get_items.data))
 
-	def test_fetch_single_shoppinglist_item(self):
+	def test_fetch_shoppinglist_item(self):
 		"""Test user can get a single item on the shoppiglist"""
 		self.register_user()
 		access_token = self.access_token()
@@ -368,8 +368,6 @@ class ApiTestCase(unittest.TestCase):
 			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
 			headers=dict(Authorization=access_token)
 		)
-		print(results)
-		print(results1)
 		self.assertEqual(get_single_item.status_code, 201)
 		self.assertIn('Carrots and Cabbages', str(get_single_item.data))
 
@@ -391,12 +389,12 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(201, create_item.status_code)
 		results1 = json.loads(create_item.data.decode())
 		update_resp = self.client().put(
-			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_title']),
+			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
 			headers=dict(Authorization=access_token),
 			data={
 				'owner_id': '1',
 				'shoppinglist_id': '1',
-				'item_title': "Sausages",
+				'item_title': "Sausages and stuff",
 				'item_description': 'Carrots and Waffles'
 			}
 		)
@@ -404,40 +402,61 @@ class ApiTestCase(unittest.TestCase):
 		self.assertTrue(b"Shopping list item updated successfuly" in update_resp.data)
 		self.assertEqual(update_resp.status_code, 201)
 
-	def test_invalid_data_update(self):
-		"""Test user can't update with invalid format title or description"""
+	def test_invalid_item_update(self):
+		"""Test user can't update item with invalid title or description"""
 		self.register_user()
+		access_token = self.access_token()
 		response = self.client().post(
 			'/shoppinglists',
 			headers=dict(Authorization=self.access_token()),
 			data=self.shoppinglist
 		)
 		self.assertTrue(response.status_code, 201)
+		results = json.loads(response.data.decode())
+		create_item = self.client().post(
+			'/shoppinglist/{0}/items'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglistitem)
+		self.assertEqual(201, create_item.status_code)
+		results1 = json.loads(create_item.data.decode())
+		update_resp = self.client().put(
+			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
+			headers=dict(Authorization=access_token),
+			data={
+				'owner_id': '1',
+				'shoppinglist_id': '1',
+				'item_title': "Sausages and stuff",
+				'item_description': 'Carrots and Waffles'
+			}
+		)
 		response1 = self.client().put(
-			'/shoppinglist/1',
+			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
 			headers=dict(Authorization=self.access_token()),
 			data={
 			'owner_id': '1',
-			'title': 666666,
-			'description': 'Items to cook my favorite meal'
+			'shoppinglist_id': results['id'],
+			'item_title': 666666,
+			'item_description': 'Carrots and Tomatoes'
 			}
 		)
 		response2 = self.client().put(
-			'/shoppinglist/1',
+			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
 			headers=dict(Authorization=self.access_token()),
 			data={
 			'owner_id': '1',
-			'title': "Nyamameat",
-			'description': 'Items to cook my favorite meal'
+			'shoppinglist_id': results['id'],
+			'item_title': "Meat",
+			'item_description': 'Carrots and Tomatoes'
 			}
 		)
 		response3 = self.client().put(
-			'/shoppinglist/1',
+			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
 			headers=dict(Authorization=self.access_token()),
 			data={
 			'owner_id': '1',
-			'title': "",
-			'description': 'Items to cook my favorite meal'
+			'shoppinglist_id': results['id'],
+			'item_title': "",
+			'item_description': 'Carrots and Tomatoes'
 			}
 		)
 		self.assertIn(b'Value can\'t be numbers', response1.data)
@@ -446,6 +465,49 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(202, response2.status_code)
 		self.assertIn(b'Value can\'t be empty', response3.data)
 		self.assertEqual(202, response3.status_code)
+
+	def test_delete_shoppinglist(self):
+		"""Test a user can delete an item on a shopping list"""
+		self.register_user()
+		access_token = self.access_token()
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(201, response.status_code)
+		results = json.loads(response.data.decode())
+		create_item = self.client().post(
+			'/shoppinglist/{0}/items'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglistitem)
+		self.assertEqual(201, create_item.status_code)
+		results1 = json.loads(create_item.data.decode())
+		delete_item = self.client().delete(
+			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
+			headers=dict(Authorization=access_token)
+		)
+		self.assertFalse(b"Carrots and Cabbages" in delete_item.data)
+		self.assertIn(b"Shopping list item \'Vegetables\' deleted successfuly", delete_item.data)
+		self.assertEqual(delete_item.status_code, 201)
+
+	def test_delete_shoppinglist(self):
+		"""Test a user can delete an item on a shopping list"""
+		self.register_user()
+		access_token = self.access_token()
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(201, response.status_code)
+		results = json.loads(response.data.decode())
+		delete_item = self.client().delete(
+			'/shoppinglist/{0}/item/7'.format(results['id']),
+			headers=dict(Authorization=access_token)
+		)
+		self.assertTrue(b"Requested value '7' was not found" in delete_item.data)
+		self.assertEqual(delete_item.status_code, 202)
 
 
 
