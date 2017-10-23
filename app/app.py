@@ -259,20 +259,21 @@ def create_app(config_name):
 
 	class ShoppingListItemsAPI(Resource):
 
-		def get(self):
+		def get(self, shoppinglist_id):
 			user_id = middleware()
 			
 			if not isinstance(user_id, str):
-				shoppinglists = ShoppingList.query.filter_by(owner_id=user_id)
+				shoppinglistitems = ShoppingListItem.query.filter_by(shoppinglist_id=shoppinglist_id)
 				results = []
-				for shoppinglist in shoppinglists:
+				for shoppinglistitem in shoppinglistitems:
 					obj = {
-						'id': shoppinglist.id,
-                        'title': shoppinglist.title,
-                        'description': shoppinglist.description,
-                        'date_created': shoppinglist.date_created,
-                        'date_modified': shoppinglist.date_modified,
-                        'owner_id': shoppinglist.owner_id
+						'item_id': shoppinglistitem.item_id,
+                        'item_title': shoppinglistitem.item_title,
+                        'item_description': shoppinglistitem.item_description,
+                        'shoppinglist_id': shoppinglistitem.shoppinglist_id,
+                        'date_created': shoppinglistitem.date_created,
+                        'date_modified': shoppinglistitem.date_modified,
+                        'owner_id': shoppinglistitem.owner_id
                     }
 					results.append(obj)
 
@@ -323,10 +324,84 @@ def create_app(config_name):
 				'message': valid_item_title
 			}
 			return response, 202
+
+	class SingleShoppingListItemAPI(Resource):
+
+		def get(self, shoppinglist_id, shoppinglistitem_id):
+			shoppinglistitem = ShoppingListItem.query.filter_by(
+				item_id=shoppinglistitem_id,
+				shoppinglist_id=shoppinglist_id
+			).first()
+			if shoppinglistitem:
+				response = {
+					'item_id': shoppinglistitem.item_id,
+					'owner_id': shoppinglistitem.owner_id,
+					'owner_id': shoppinglistitem.shoppinglist_id,
+					'item_title': shoppinglistitem.item_title,
+					'item_description': shoppinglistitem.item_description,
+					'message': 'success'
+				}
+				return response, 201
+			response = {
+				'message': 'Requested value \'{}\' was not found'.format(shoppinglistitem_id)
+			}
+			return response, 202
+
+		def put(self, shoppinglist_id, shoppinglistitem_id):
+			post_data = ['item_title', 'item_description']
+			for arg in range(len(post_data)):
+				parser.add_argument(post_data[arg])
+			args = parser.parse_args()
+			item_title = args['item_title']
+			item_description = args['item_description']
+			valid_item_title = is_valid(value=item_title, min_length=10, _type="text")
+			valid_item_description = is_valid(value=item_description, min_length=10, _type="text")
+			if valid_item_title is True and valid_item_description:
+				user_id = middleware()
+				if not isinstance(user_id, str):
+					check_exists = ShoppingListItem.query.filter_by(item_title=item_title).first()
+					if check_exists is None:
+						shoppinglistitem = ShoppingListItem(item_title=item_title, item_description=item_description, owner_id=user_id)
+						shoppinglistitem.save_shoppinglistitem()
+						# Return Response
+						response = {
+							'item_id': shoppinglistitem.item_id,
+							'owner': shoppinglistitem.owner_id,
+							'item_title': shoppinglistitem.item_title,
+							'item_description': shoppinglistitem.item_description,
+							'message': 'Shopping List updated successfuly'
+						}
+						return response, 201
+					response = {
+						'message': 'Shopping List {} already exists'.format(item_title)
+					}
+					return response, 202
+				response = jsonify({
+					'message': user_id
+				})
+				return response
+			response = {
+				'message': valid_item_title
+			}
+			return response, 202
+
+		def delete(self, shoppinglist_id):
+			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
+			if shoppinglist:
+				shoppinglist.delete_shoppinglist()
+				response = {
+					'message': 'Shopping List \'{}\' deleted successfuly'.format(shoppinglist.title)
+				}
+				return response, 201
+			response = {
+				'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
+			}
+			return response, 202
 	
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
 	api.add_resource(ShoppingListAPI, '/shoppinglists')
 	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
 	api.add_resource(ShoppingListItemsAPI, '/shoppinglist/<int:shoppinglist_id>/items', endpoint='shoppinglistitems')
+	api.add_resource(SingleShoppingListItemAPI, '/shoppinglist/<int:shoppinglist_id>/item/<int:shoppinglistitem_id>', endpoint='singleshoppinglistitem')
 	return app
