@@ -1,12 +1,10 @@
 import datetime
-import sys
 from functools import wraps
 from flask import Flask, request, jsonify, make_response, json
 from flask_restful import reqparse, abort, Api, Resource
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import jwt
-import logging
 
 # local import
 from instance.config import app_config
@@ -24,11 +22,10 @@ def create_app(config_name):
 	app = Flask(__name__, instance_relative_config=True)
 	api = Api(app)
 	bcrypt = Bcrypt(app)
+	print(app.config)
 	app.config.from_object(app_config[config_name])
 	app.config.from_pyfile('config.py')
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-	app.logger.addHandler(logging.StreamHandler(sys.stdout))
-	app.logger.setLevel(logging.ERROR)
 	db.init_app(app)
 
 	parser = reqparse.RequestParser()
