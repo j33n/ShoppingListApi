@@ -26,7 +26,7 @@ class Users(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def encode_token(user_id):
+    def encode_token(self, user_id):
         """Generates the Auth Token"""
         try:
             payload = {
