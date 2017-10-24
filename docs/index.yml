@@ -10,7 +10,7 @@ paths:
   "/auth/register":
     post:
       tags:
-        - User Registration
+        - Authentication
       summary: User account registration
       parameters:
         - in: body
@@ -61,7 +61,7 @@ paths:
   "/auth/login":
     post:
       tags:
-        - User Login
+        - Authentication
       summary: User account sign in
       parameters:
         - in: body
@@ -98,7 +98,7 @@ paths:
   "/shoppinglists":
     post:
       tags:
-        - Create a Shoppinglist
+        - Create a Shoppinglist and View all Shoppinglists
       summary: User creates a shoppinglist
       parameters:
         - in: body
@@ -138,5 +138,141 @@ paths:
                 default: "Shopping List created successfuly"
               
         202:
-          description: "Shopping List '' already exists"
+          description: "Shopping List `` already exists"
+    get:
+      tags:
+        - Create a Shoppinglist and View all Shoppinglists
+      summary: User can view all Shoppinglists
+      responses:
+        201:
+          description: Shopping list created successfuly
+          schema:
+            properties:
+              id:
+                type: integer
+                description: User's ID
+                default: 20
+              owner:
+                type: integer
+                description: User's ID
+                default: 2
+              title:
+                type: string
+                description: User's ID
+                default: "My favorite meal"
+              description:
+                type: string
+                description: User's ID
+                default: "Meat and Vitunguu"
+              message:
+                type: string
+                description: Success
+                default: "success"
+              
+        202:
+          description: "Requested value `` was not found"
 
+  "/shoppinglist/{shoppinglist_id}":
+    get:
+      tags:
+        - View, Update and Delete a shoppinglist
+      summary: User can view a shoppinglist
+      parameters:
+        - in: body
+          name: shoppinglist_id
+          type: integer
+          required: true
+          default: 1
+      responses:
+        201:
+          description: Shopping list created successfuly
+          schema:
+            properties:
+              id:
+                type: integer
+                description: User's ID
+                default: 20
+              title:
+                type: string
+                description: Title
+                default: "My favorite meal"
+              description:
+                type: string
+                description: Description
+                default: "Meat and Vitunguu"
+              date_created:
+                type: string
+                description: date_created
+                default: "10/23/2017"
+              date_modified:
+                type: string
+                description: date_modified
+                default: "10/23/2017"
+              message:
+                type: string
+                description: Success
+                default: "success"              
+        202:
+          description: "Requested value `` was not found"
+    put:
+      tags:
+        - View, Update and Delete a shoppinglist
+      summary: User can update a shoppinglist
+      parameters:
+        - in: body
+          name: shoppinglist_id
+          type: integer
+          required: true
+          default: 1
+        - in: body
+          name: title
+          type: string
+          required: true
+          default: "My favorite meat"
+        - in: body
+          name: description
+          type: string
+          required: true
+          default: "Chicken meat"
+      responses:
+        201:
+          description: User can update shoppinglist
+          schema:
+            properties:
+              id:
+                type: integer
+                description: User's ID
+                default: 20
+              owner:
+                type: integer
+                description: Owner's ID
+                default: 4
+              title:
+                type: string
+                description: Title
+                default: "My favorite meat"
+              description:
+                type: string
+                description: Description
+                default: "Chicken meat"
+              message:
+                type: string
+                description: Success
+                default: "success"              
+        202:
+          description: "Shopping List `` already exists"
+    delete:
+      tags:
+        - View, Update and Delete a shoppinglist
+      summary: User can delete a shoppinglist
+      parameters:
+        - in: body
+          name: shoppinglist_id
+          type: integer
+          required: true
+          default: 1
+      responses:
+        201:
+          description: "Requested value `` was not found"                       
+        202:
+          description: "Requested value `` was not found"
