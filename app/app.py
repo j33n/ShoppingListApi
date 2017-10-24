@@ -25,7 +25,6 @@ def create_app(config_name):
 	app.config.from_object(app_config[config_name])
 	app.config.from_pyfile('config.py')
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-	print(app.config)
 	db.init_app(app)
 
 	parser = reqparse.RequestParser()
@@ -90,11 +89,10 @@ def create_app(config_name):
 			if user is not None and bcrypt.check_password_hash(
                 user.password, password):
 				token = Users.encode_token(user.id)
-				print(token)
 				response = {
                     'status': 'success',
                     'message': 'Successfully logged in.',
-                    'token': token
+                    'token': str(token, 'utf-8')
                 }
 				return response, 200
 			response = {
