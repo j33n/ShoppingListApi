@@ -91,7 +91,7 @@ def create_app(config_name):
 	                user.password, password):
 					token = user.encode_token(user.id)
 					response = {
-	                    'status': 'success',
+						'id': user.id,
 	                    'message': 'Successfully logged in.',
 	                    'token': token.decode()
 	                }

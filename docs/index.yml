@@ -1,0 +1,142 @@
+---
+basePath: "/"
+
+info:
+  description: An api to make shopping quick, easy and fun by organizing and keeping track of your lists
+  title: ShoppingListAPI
+  version: 1.0.0
+
+paths:
+  "/auth/register":
+    post:
+      tags:
+        - User Registration
+      summary: User account registration
+      parameters:
+        - in: body
+          name: username
+          type: string
+          required: true
+          default: "John Doe"
+        - in: body
+          name: email
+          type: string
+          required: true
+          default: "johndoe@testmail.com"
+        - in: body
+          name: password
+          type: string
+          required: true
+          default: "secret"
+        - in: body
+          name: confirm_password
+          type: string
+          required: true
+          default: "secret"
+      responses:
+        201:
+          description: User account has been created successfully
+          schema:
+            properties:
+              id:
+                type: integer
+                description: User's ID
+                default: 20
+              username:
+                type: string
+                description: User's name
+                default: John Doe
+              date_created:
+                type: string
+                description: Date created
+                default: 10/23/2017
+              message:
+                type: string
+                description: Success
+                default: User account created successfuly
+              
+        202:
+          description: User account already exists.
+
+  "/auth/login":
+    post:
+      tags:
+        - User Login
+      summary: User account sign in
+      parameters:
+        - in: body
+          name: email
+          type: string
+          required: true
+          default: "johndoe@testmail.com"
+        - in: body
+          name: password
+          type: string
+          required: true
+          default: "secret"
+      responses:
+        201:
+          description: User has been logged in successfully
+          schema:
+            properties:
+              id:
+                type: integer
+                description: User's ID
+                default: 20
+              message:
+                type: string
+                description: Success
+                default: Successfully logged in.
+              token:
+                type: string
+                description: Token
+                default: <generated token>
+              
+        202:
+          description: Invalid credentials
+
+  "/shoppinglists":
+    post:
+      tags:
+        - Create a Shoppinglist
+      summary: User creates a shoppinglist
+      parameters:
+        - in: body
+          name: title
+          type: string
+          required: true
+          default: "My favorite meal"
+        - in: body
+          name: description
+          type: string
+          required: true
+          default: "Meat and Vitunguu"
+      responses:
+        201:
+          description: Shopping list created successfuly
+          schema:
+            properties:
+              id:
+                type: integer
+                description: User's ID
+                default: 20
+              owner:
+                type: integer
+                description: User's ID
+                default: 2
+              title:
+                type: string
+                description: User's ID
+                default: "My favorite meal"
+              description:
+                type: string
+                description: User's ID
+                default: "Meat and Vitunguu"
+              message:
+                type: string
+                description: Success
+                default: "Shopping List created successfuly"
+              
+        202:
+          description: "Shopping List '' already exists"
+
