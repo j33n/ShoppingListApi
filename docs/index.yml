@@ -273,6 +273,190 @@ paths:
           default: 1
       responses:
         201:
-          description: "Requested value `` was not found"                       
+          description: "Shopping list item `` deleted successfuly"                       
+        202:
+          description: "Requested value `` was not found"
+
+  "/shoppinglist/{shoppinglist_id}/items":
+    post:
+      tags:
+        - Create an item on a Shoppinglist and View all items
+      summary: User can create an item
+      parameters:
+        - in: body
+          name: item_title
+          type: string
+          required: true
+          default: "Vegetables"
+        - in: body
+          name: item_description
+          type: string
+          required: true
+          default: "Tomatoes and Cabbages"
+      responses:
+        200:
+          description: Create Shopping list item
+          schema:
+            properties:
+              item_id:
+                type: integer
+                description: Item's ID
+                default: 20
+              shoppinglist_id:
+                type: integer
+                description: Shoppinglists' ID
+                default: 20
+              owner_id:
+                type: integer
+                description: Owner's ID
+                default: 2
+              item_title:
+                type: string
+                description: Item title
+                default: "Vegetables"
+              item_description:
+                type: string
+                description: Item description
+                default: "Tomatoes and Cabbages"
+              message:
+                description: Item created successfuly
+                type: string
+                default: 'Shopping list item `` created successfuly'
+        202:
+          description: Shopping List item {} already exists
+        401:
+          description: "<Token Error message>"
+    get:
+      tags:
+        - Create a Shoppinglist and View all Shoppinglists
+      summary: User can view all Shopping list items
+      responses:
+        201:
+          description: View all shoppinglist items
+          schema:
+            properties:
+              id:
+                type: integer
+                description: Shoppinglist ID
+                default: 20
+              owner:
+                type: integer
+                description: User's ID
+                default: 2
+              title:
+                type: string
+                description: User's ID
+                default: "My favorite meal"
+              description:
+                type: string
+                description: User's ID
+                default: "Meat and Vitunguu"
+              message:
+                type: string
+                description: Success
+                default: "success"              
+        401:
+          description: <Token error message>
+
+  "/shoppinglist/{shoppinglist_id}/item/{shoppinglistitem_id}":
+    get:
+      tags:
+        - View, Update and Delete a shoppinglist item
+      summary: User can view a shoppinglist
+      parameters:
+        - in: body
+          name: shoppinglist_id
+          type: integer
+          required: true
+          default: 1
+        - in: body
+          name: shoppinglistitem_id
+          type: integer
+          required: true
+          default: 2
+      responses:
+        201:
+          description: Shopping list created successfuly
+          schema:
+            properties:
+              item_id:
+                type: integer
+                description: Item ID
+                default: 20
+              item_title:
+                type: string
+                description: Title of the item
+                default: "Vegetables"
+              item_description:
+                type: string
+                description: Description of the item
+                default: "Tomatoes and Cabbages"
+              message:
+                type: string
+                description: Success
+                default: "success"              
+        202:
+          description: "Requested value `` was not found"
+    put:
+      tags:
+        - View, Update and Delete a shoppinglist item
+      summary: User can update a shoppinglist item
+      parameters:
+        - in: body
+          name: shoppinglist_id
+          type: integer
+          required: true
+          default: 1
+        - in: body
+          name: item_title
+          type: string
+          required: true
+          default: "Basic drink"
+        - in: body
+          name: item_description
+          type: string
+          required: true
+          default: "Big Sprite"
+      responses:
+        201:
+          description: User can update shoppinglist item
+          schema:
+            properties:
+              item_id:
+                type: integer
+                description: User's ID
+                default: 20
+              item_title:
+                type: string
+                description: Title
+                default: "Basic drink"
+              item_description:
+                type: string
+                description: Description
+                default: "Chicken meat"
+              message:
+                type: string
+                description: Success
+                default: "Shopping list item updated successfuly"              
+        202:
+          description: "Shopping List `` already exists"
+    delete:
+      tags:
+        - View, Update and Delete a shoppinglist
+      summary: User can delete a shoppinglist item
+      parameters:
+        - in: body
+          name: shoppinglist_id
+          type: integer
+          required: true
+          default: 1
+        - in: body
+          name: shoppinglistitem_id
+          type: integer
+          required: true
+          default: 2
+      responses:
+        201:
+          description: "Shopping list item `` deleted successfuly"                       
         202:
           description: "Requested value `` was not found"

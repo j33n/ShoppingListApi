@@ -289,9 +289,8 @@ def create_app(config_name):
                         'owner_id': shoppinglistitem.owner_id
                     }
 					results.append(obj)
-
 				response = jsonify(results)
-				response.status_code = 202
+				response.status_code = 200
 				return response
 			else:
                 # Return token error message
@@ -322,7 +321,7 @@ def create_app(config_name):
 							'shoppinglist_id': shoppinglistitem.shoppinglist_id,
 							'item_title': shoppinglistitem.item_title,
 							'item_description': shoppinglistitem.item_description,
-							'message': 'Shopping List created successfuly'
+							'message': 'Shopping list item {} created successfuly'.format(item_title)
 						}
 						return response, 201
 					response = {
@@ -349,7 +348,7 @@ def create_app(config_name):
 				response = {
 					'item_id': shoppinglistitem.item_id,
 					'owner_id': shoppinglistitem.owner_id,
-					'owner_id': shoppinglistitem.shoppinglist_id,
+					'shoppinglist_id': shoppinglistitem.shoppinglist_id,
 					'item_title': shoppinglistitem.item_title,
 					'item_description': shoppinglistitem.item_description,
 					'message': 'success'
@@ -379,8 +378,6 @@ def create_app(config_name):
 						# Return Response
 						response = {
 							'item_id': shoppinglistitem.item_id,
-							'owner': shoppinglistitem.owner_id,
-							'shoppinglist_id': shoppinglistitem.shoppinglist_id,
 							'item_title': shoppinglistitem.item_title,
 							'item_description': shoppinglistitem.item_description,
 							'message': 'Shopping list item updated successfuly'

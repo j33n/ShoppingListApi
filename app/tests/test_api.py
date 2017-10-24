@@ -344,7 +344,7 @@ class ApiTestCase(unittest.TestCase):
 			'/shoppinglist/{0}/items'.format(results['id']),
 			headers=dict(Authorization=access_token)
 		)
-		self.assertEqual(get_items.status_code, 202)
+		self.assertEqual(get_items.status_code, 200)
 		self.assertIn('Carrots and Cabbages', str(get_items.data))
 
 	def test_fetch_shoppinglist_item(self):
