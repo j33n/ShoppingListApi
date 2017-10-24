@@ -328,7 +328,7 @@ paths:
           description: "<Token Error message>"
     get:
       tags:
-        - Create a Shoppinglist and View all Shoppinglists
+        - Create an item on a Shoppinglist and View all items
       summary: User can view all Shopping list items
       responses:
         201:
@@ -442,7 +442,7 @@ paths:
           description: "Shopping List `` already exists"
     delete:
       tags:
-        - View, Update and Delete a shoppinglist
+        - View, Update and Delete a shoppinglist item
       summary: User can delete a shoppinglist item
       parameters:
         - in: body
