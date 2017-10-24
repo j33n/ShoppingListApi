@@ -30,7 +30,7 @@ class Users(db.Model):
         """Generates the Auth Token"""
         try:
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, minutes=5),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
                 'iat': datetime.datetime.utcnow(),
                 'sub': user_id
             }
@@ -40,7 +40,7 @@ class Users(db.Model):
                 algorithm='HS256'
             )
         except Exception as e:
-            return e
+            return str(e)
 
     @staticmethod
     def decode_token(user_id):

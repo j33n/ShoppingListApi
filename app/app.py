@@ -85,21 +85,28 @@ def create_app(config_name):
 			args = parser.parse_args()
 			email = args['email']
 			password = args['password']
-			user = Users.query.filter_by(email=email).first()
-			if user is not None and bcrypt.check_password_hash(
-                user.password, password):
-				token = Users.encode_token(user.id)
+			try:
+				user = Users.query.filter_by(email=email).first()
+				if user is not None and bcrypt.check_password_hash(
+	                user.password, password):
+					token = user.encode_token(user.id)
+					response = {
+	                    'status': 'success',
+	                    'message': 'Successfully logged in.',
+	                    'token': token.decode()
+	                }
+					return response, 200
 				response = {
-                    'status': 'success',
-                    'message': 'Successfully logged in.',
-                    'token': str(token, 'utf-8')
-                }
-				return response, 200
-			response = {
-				'status': 'fail',
-				'message': 'Invalid credentials'
-			}
-			return response, 202
+					'status': 'fail',
+					'message': 'Invalid credentials'
+				}
+				return response, 202
+
+			except Exception as e:
+				response = {
+					'message': str(e)
+				},
+				return response, 500
 
 	def middleware():
 		auth_header = request.headers.get('Authorization')
