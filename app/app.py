@@ -91,11 +91,10 @@ def create_app(config_name):
                 user.password, password):
 				token = Users.encode_token(user.id)
 				print(token)
-				print(token.decode('utf-8'))
 				response = {
                     'status': 'success',
                     'message': 'Successfully logged in.',
-                    'token': token.decode('utf-8')
+                    'token': token
                 }
 				return response, 200
 			response = {
