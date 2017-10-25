@@ -232,11 +232,11 @@ class ApiTestCase(unittest.TestCase):
 			}
 		)
 		self.assertIn(b'Value can\'t be numbers', response1.data)
-		self.assertEqual(202, response1.status_code)
+		self.assertEqual(200, response1.status_code)
 		self.assertIn(b'Value should be more than 10 characters', response2.data)
-		self.assertEqual(202, response2.status_code)
+		self.assertEqual(200, response2.status_code)
 		self.assertIn(b'Value can\'t be empty', response3.data)
-		self.assertEqual(202, response3.status_code)
+		self.assertEqual(200, response3.status_code)
 
 
 	def test_delete_shoppinglist(self):
@@ -318,11 +318,11 @@ class ApiTestCase(unittest.TestCase):
 			}
 		)
 		self.assertIn(b'Value can\'t be numbers', response1.data)
-		self.assertEqual(202, response1.status_code)
+		self.assertEqual(200, response1.status_code)
 		self.assertIn(b'Value should be more than 10 characters', response2.data)
-		self.assertEqual(202, response2.status_code)
+		self.assertEqual(200, response2.status_code)
 		self.assertIn(b'Value can\'t be empty', response3.data)
-		self.assertEqual(202, response3.status_code)
+		self.assertEqual(200, response3.status_code)
 
 	def test_get_all_shoppinglist_items(self):
 		"""Test that a user can get all items on a shoppiglist"""
@@ -344,7 +344,7 @@ class ApiTestCase(unittest.TestCase):
 			'/shoppinglist/{0}/items'.format(results['id']),
 			headers=dict(Authorization=access_token)
 		)
-		self.assertEqual(get_items.status_code, 200)
+		self.assertEqual(get_items.status_code, 202)
 		self.assertIn('Carrots and Cabbages', str(get_items.data))
 
 	def test_fetch_shoppinglist_item(self):
@@ -460,11 +460,11 @@ class ApiTestCase(unittest.TestCase):
 			}
 		)
 		self.assertIn(b'Value can\'t be numbers', response1.data)
-		self.assertEqual(202, response1.status_code)
+		self.assertEqual(200, response1.status_code)
 		self.assertIn(b'Value should be more than 10 characters', response2.data)
-		self.assertEqual(202, response2.status_code)
+		self.assertEqual(200, response2.status_code)
 		self.assertIn(b'Value can\'t be empty', response3.data)
-		self.assertEqual(202, response3.status_code)
+		self.assertEqual(200, response3.status_code)
 
 	def test_delete_shoppinglist(self):
 		"""Test a user can delete an item on a shopping list"""
