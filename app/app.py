@@ -45,35 +45,56 @@ def create_app(config_name):
 				parser.add_argument(post_data[arg])
 			args = parser.parse_args()
 			if args['password'] != args['confirm_password']:
-				return "Password does not match"
+				response = {
+					'status': 'fail',
+					'message': 'Password does not match'
+				}
+				return response, 202
 			# Encrypt password
-			password = bcrypt.generate_password_hash(
-				args['password'], app.config.get('BCRYPT_LOG_ROUNDS')
-				).decode('utf-8')
+
+			try:
+				password = bcrypt.generate_password_hash(
+					args['password'], app.config.get('BCRYPT_LOG_ROUNDS')
+					).decode('utf-8')
+			except ValueError as err:
+				response = jsonify({
+					'status': 'fail',
+					'message': str(err)
+				})
+				response.status_code = 500
+				return response
+
 			email = args['email']
 			username = args['username']
-			# Get user from db
-			check_user = Users.query.filter_by(email=email).first()
-			# Check user account exists
-			if check_user is None:
-				user = Users(username=username, email=email, password=password)
-				# Save user
-				user.save_user()
-				# Return Response
+			if email and username:
+				# Get user from db
+				check_user = Users.query.filter_by(email=email).first()
+				# Check user account exists
+				if check_user is None:	
+					user = Users(username=username, email=email, password=password)
+					# Save user
+					user.save_user()
+					# Return Response
+					response = jsonify({
+						'id': user.id,
+						'username': user.username,
+						'email': user.email,
+						'date_created': user.date_created,
+						'message': 'User account created successfuly'
+					})
+					response.status_code = 201
+					return response
 				response = jsonify({
-					'id': user.id,
-					'username': user.username,
-					'email': user.email,
-					'date_created': user.date_created,
-					'message': 'User account created successfuly'
-				})
-				response.status_code = 201
+	                'status': 'fail',
+	                'message': 'User account already exists.',
+	            })
+				response.status_code = 202
 				return response
 			response = jsonify({
                 'status': 'fail',
-                'message': 'User account already exists.',
+                'message': 'Email or Username can\'t be empty.',
             })
-			response.status_code = 202
+			response.status_code = 500
 			return response
 
 	class Login(Resource):
