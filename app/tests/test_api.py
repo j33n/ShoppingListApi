@@ -3,6 +3,7 @@ import os
 import json
 from flask import Flask
 from app.app import create_app, db
+from app.models import Users, UserToken
 
 class ApiTestCase(unittest.TestCase):
 	"""User test case"""
@@ -54,12 +55,60 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(response.status_code, 201)
 		self.assertIn("User account created successfuly", str(response.data))
 
+	def test_password_mismatch(self):
+		"""Test user creates an account when he confirms password"""
+		response = self.client().post('/auth/register', data={
+			'username': 'Stallion',
+			'email': 'rocky@test.com',
+			'password': 'secret',
+			'confirm_password': 'secreto'
+		})
+		self.assertEqual(response.status_code, 202)
+		self.assertIn("Password does not match", str(response.data))
+
+	def test_missing_registration_data(self):
+		"""Test a user is not missing out a password"""
+		response = self.client().post('/auth/register', data={
+			'username': 'Stallion',
+			'email': 'rocky@test.com'
+		})
+		self.assertEqual(response.status_code, 500)
+		self.assertIn("Password must be non-empty.", str(response.data))
+
+	def test_account_duplicate(self):
+		"""Test users can't create similar accounts"""
+		response = self.register_user()
+		self.assertEqual(response.status_code, 201)
+		self.assertIn("User account created successfuly", str(response.data))
+		response1 = self.register_user()
+		self.assertEqual(response1.status_code, 202)
+		self.assertIn("User account already exists.", str(response1.data))
+
+	def test_empty_values(self):
+		"""Test a user is not missing out an email or password"""
+		response = self.client().post('/auth/register', data={
+			'username': 'Stallion',
+			'email': '',
+			'password': 'secret',
+			'confirm_password': 'secret'
+		})
+		self.assertEqual(response.status_code, 500)
+		self.assertIn(b"Email or Username can\'t be empty.", response.data)
+
+
 	def test_user_login(self):
 		"""Test user can login"""
 		self.register_user()
 		response = self.login_user()
 		self.assertEqual(response.status_code, 200)
 		self.assertIn("token", str(response.data))
+		# Test invalid credentials
+		wrong_cred_login = self.client().post('/auth/login', data={
+			'email': 'Stallion',
+			'password': 'secret'
+		})
+		self.assertEqual(wrong_cred_login.status_code, 202)
+		self.assertIn("Invalid credentials", str(wrong_cred_login.data))
 
 	def test_create_shoppinglist(self):
 		"""Test user can create a shoppinglist"""
@@ -512,10 +561,20 @@ class ApiTestCase(unittest.TestCase):
 	def test_token_unprovided(self):
 		"""Test a token is always provided on login"""
 		self.register_user()
+		access_token = self.access_token()
 		response = self.client().get(
 			'/shoppinglists'
 			)
 		self.assertIn(b"Authorization is not provided", response.data)
+
+	def test_welcome_page(self):
+		"""Test welcome page"""
+		response = self.client().get('/')
+		self.assertTrue(b"Welcome to Shopping List API" in response.data)
+		self.assertEqual(response.status_code, 200)
+
+
+
 
 
 

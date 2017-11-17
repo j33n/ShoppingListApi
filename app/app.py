@@ -118,13 +118,14 @@ def create_app(config_name):
 	                }
 					return response, 200
 				response = {
-					'status': 'fail',
+					'status': "fail",
 					'message': 'Invalid credentials'
 				}
 				return response, 202
 
 			except Exception as e:
 				response = {
+					'status': "fail",
 					'message': str(e)
 				},
 				return response, 500
