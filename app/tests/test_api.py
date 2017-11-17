@@ -466,7 +466,7 @@ class ApiTestCase(unittest.TestCase):
 		self.assertIn(b'Value can\'t be empty', response3.data)
 		self.assertEqual(200, response3.status_code)
 
-	def test_delete_shoppinglist(self):
+	def test_delete_shoppinglistitem(self):
 		"""Test a user can delete an item on a shopping list"""
 		self.register_user()
 		access_token = self.access_token()
@@ -491,7 +491,7 @@ class ApiTestCase(unittest.TestCase):
 		self.assertIn(b"Shopping list item \'Vegetables\' deleted successfuly", delete_item.data)
 		self.assertEqual(delete_item.status_code, 201)
 
-	def test_delete_shoppinglist(self):
+	def test_delete_wrong_shoppinglistitem(self):
 		"""Test a user can delete an item on a shopping list"""
 		self.register_user()
 		access_token = self.access_token()
@@ -508,6 +508,14 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertTrue(b"Requested value '7' was not found" in delete_item.data)
 		self.assertEqual(delete_item.status_code, 202)
+
+	def test_token_unprovided(self):
+		"""Test a token is always provided on login"""
+		self.register_user()
+		response = self.client().get(
+			'/shoppinglists'
+			)
+		self.assertIn(b"Authorization is not provided", response.data)
 
 
 
