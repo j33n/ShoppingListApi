@@ -26,7 +26,3 @@ class TestTestingConfig(unittest.TestCase):
         self.assertTrue(app.config['TESTING'] is True)
         self.assertNotEqual(app.config['SQLALCHEMY_DATABASE_URI'], None)
         self.assertIn("_test" ,app.config['SQLALCHEMY_DATABASE_URI'])
-
-
-if __name__ == '__main__':
-    unittest.main()
