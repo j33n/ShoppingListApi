@@ -234,7 +234,7 @@ def create_app(config_name):
 			return response, 202
 
 
-	class SingleShoppingListAPI(Resource):
+	class SingleShoppingListAPI(Resource):	
 
 		def get(self, shoppinglist_id):
 			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()

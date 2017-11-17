@@ -15,10 +15,7 @@ class TestDevelopmentConfig(unittest.TestCase):
         self.assertFalse(
            app.config['SECRET_KEY'] == "my_precious"
         )
-        self.assertTrue(
-           app.config['SQLALCHEMY_DATABASE_URI'] ==
-                'postgresql://postgres:postgres@localhost/shoppinglist'
-        )
+        self.assertNotEqual(app.config['SQLALCHEMY_DATABASE_URI'], None)
 
 
 class TestTestingConfig(unittest.TestCase):
@@ -27,10 +24,8 @@ class TestTestingConfig(unittest.TestCase):
         app = create_app(config_name="testing")
         self.assertTrue(app.config['DEBUG'])
         self.assertTrue(app.config['TESTING'] is True)
-        self.assertTrue(
-           app.config['SQLALCHEMY_DATABASE_URI'] ==
-                'postgresql://postgres:postgres@localhost/shoppinglist_test'
-        )
+        self.assertNotEqual(app.config['SQLALCHEMY_DATABASE_URI'], None)
+        self.assertIn("_test" ,app.config['SQLALCHEMY_DATABASE_URI'])
 
 
 if __name__ == '__main__':
