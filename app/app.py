@@ -142,7 +142,7 @@ def create_app(config_name):
 					results.append(obj)
 				if len(results) == 0:
 					response = {
-						'message': "You don't have any shoppinglists for now"
+						'message': "You don't have any shoppinglists for now."
 					}
 					return response, 200
 				response = jsonify(results)
@@ -151,17 +151,17 @@ def create_app(config_name):
 			else:
 				return user_id
 		def post(self):
-			post_data = ['title', 'description']
-			for arg in range(len(post_data)):
-				parser.add_argument(post_data[arg])
-			args = parser.parse_args()
-			title = args['title']
-			description = args['description']
-			valid_title = is_valid(value=title, min_length=10, _type="text")
-			valid_description = is_valid(value=description, min_length=10, _type="text")
-			if valid_title is True and valid_description:
-				user_id = middleware()
-				if not isinstance(user_id, str):
+			user_id = middleware()					
+			if isinstance(user_id, int):
+				post_data = ['title', 'description']
+				for arg in range(len(post_data)):
+					parser.add_argument(post_data[arg])
+				args = parser.parse_args()
+				title = args['title']
+				description = args['description']
+				valid_title = is_valid(value=title, min_length=10, _type="text")
+				valid_description = is_valid(value=description, min_length=10, _type="text")
+				if valid_title is True and valid_description:
 					check_exists = ShoppingList.query.filter_by(title=title).first()
 					if check_exists is None:
 						shoppinglist = ShoppingList(title=title, description=description, owner_id=user_id)
@@ -179,33 +179,35 @@ def create_app(config_name):
 						'message': 'Shopping List {} already exists'.format(title)
 					}
 					return response, 202
-				response = jsonify({
-					'message': user_id
-				})
-				return response
-			response = {
-				'message': valid_title
-			}
-			return response, 202
+				response = {
+					'message': valid_title
+				}
+				return response, 202
+			else:
+				return user_id
 
 
 	class SingleShoppingListAPI(Resource):	
 
 		def get(self, shoppinglist_id):
-			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
-			if shoppinglist:
+			user_id = middleware()
+			if isinstance(user_id, int):
+				shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
+				if shoppinglist:
+					response = {
+						'id': shoppinglist.id,
+						'owner': shoppinglist.owner_id,
+						'title': shoppinglist.title,
+						'description': shoppinglist.description,
+						'status': 'success'
+					}
+					return response, 201
 				response = {
-					'id': shoppinglist.id,
-					'owner': shoppinglist.owner_id,
-					'title': shoppinglist.title,
-					'description': shoppinglist.description,
-					'message': 'success'
+					'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
 				}
-				return response, 201
-			response = {
-				'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
-			}
-			return response, 202
+				return response, 202
+			else:
+				return user_id
 
 		def put(self, shoppinglist_id):
 			user_id = middleware()
@@ -231,10 +233,12 @@ def create_app(config_name):
 							'owner': shoppinglist.owner_id,
 							'title': shoppinglist.title,
 							'description': shoppinglist.description,
-							'message': 'Shopping List updated successfuly'
+							'message': 'Shopping List updated successfuly',
+							'status': 'success'
 						}
 						return response, 201
 					response = {
+						'status': "fail",
 						'message': 'Shopping List {} already exists'.format(title)
 					}
 					return response, 202					
@@ -258,10 +262,12 @@ def create_app(config_name):
 			if shoppinglist:
 				shoppinglist.delete_shoppinglist()
 				response = {
+					'status': 'success',
 					'message': 'Shopping List \'{}\' deleted successfuly'.format(shoppinglist.title)
 				}
 				return response, 201
 			response = {
+				'status': 'fail',
 				'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
 			}
 			return response, 202
@@ -286,6 +292,7 @@ def create_app(config_name):
 					results.append(obj)
 				if len(results) == 0:
 					response = {
+						'status': 'success',
 						'message': "You don't have any items for now"
 					}
 					return response, 200

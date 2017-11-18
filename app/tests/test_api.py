@@ -126,13 +126,29 @@ class ApiTestCase(unittest.TestCase):
 	def test_create_shoppinglist(self):
 		"""Test user can create a shoppinglist"""
 		self.register_user()
-		response = self.client().post(
+		# Test empty shoppinglists
+		response1 = self.client().get(
+			'/shoppinglists',
+			headers=dict(Authorization=self.access_token())
+		)
+		self.assertTrue("You don't have any shoppinglists for now.", response1.data)
+		self.assertEqual(200, response1.status_code)
+		# Test shoppinglists without authorization
+		response2 = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=self.access_token() + '_'),
+			data=self.shoppinglist
+		)
+		self.assertTrue('fail' in str(response2.data))
+
+		response3 = self.client().post(
 			'/shoppinglists',
 			headers=dict(Authorization=self.access_token()),
 			data=self.shoppinglist
 		)
-		self.assertTrue('My favorite meal' in str(response.data))
-		self.assertEqual(201, response.status_code)
+		self.assertTrue('My favorite meal' in str(response3.data))
+		self.assertEqual(201, response3.status_code)
+
 	def test_invalid_shoppinglists(self):
 		"""Test user can't create mal formatted shoppinglists"""
 		self.register_user()
