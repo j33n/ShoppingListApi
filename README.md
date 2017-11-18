@@ -1,4 +1,4 @@
-UShoppingListApi
+ShoppingListApi
 
 [![Build Status](https://travis-ci.org/JeanAbayo/ShoppingListApi.svg?branch=develop)](https://travis-ci.org/JeanAbayo/ShoppingListApi)
 [![Coverage Status](https://coveralls.io/repos/github/JeanAbayo/ShoppingListApi/badge.svg?branch=master)](https://coveralls.io/github/JeanAbayo/ShoppingListApi?branch=master)

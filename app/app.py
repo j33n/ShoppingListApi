@@ -19,6 +19,7 @@ JWT_EXP_DELTA_SECONDS = 20
 
 def create_app(config_name):
 	from app.models import Users, ShoppingList, ShoppingListItem
+	from app.helpers import middleware, is_valid
 	app = Flask(__name__, instance_relative_config=True)
 	api = Api(app)
 	bcrypt = Bcrypt(app)
@@ -106,67 +107,21 @@ def create_app(config_name):
 			args = parser.parse_args()
 			email = args['email']
 			password = args['password']
-			try:
-				user = Users.query.filter_by(email=email).first()
-				if user is not None and bcrypt.check_password_hash(
-	                user.password, password):
-					token = user.encode_token(user.id)
-					response = {
-						'id': user.id,
-	                    'message': 'Successfully logged in.',
-	                    'token': token.decode()
-	                }
-					return response, 200
+			user = Users.query.filter_by(email=email).first()
+			if user is not None and bcrypt.check_password_hash(
+                user.password, password):
+				token = user.encode_token(user.id)
 				response = {
-					'status': "fail",
-					'message': 'Invalid credentials'
-				}
-				return response, 202
-
-			except Exception as e:
-				response = {
-					'status': "fail",
-					'message': str(e)
-				},
-				return response, 500
-
-	def middleware():
-		auth_header = request.headers.get('Authorization')
-		if auth_header:
-			access_token = auth_header.split(" ")[1]
-			if access_token:
-				user_id = Users.decode_token(access_token)
-				if not isinstance(user_id, int):
-					response = {
-						'status': 'fail',
-						'message': user_id
-					}
-					return response, 403
-				return user_id
+					'id': user.id,
+                    'message': 'Successfully logged in.',
+                    'token': token.decode()
+                }
+				return response, 200
 			response = {
-		    	'status': 'fail',
-		    	'message': 'Bearer token malformed.'
-		    }
-			return response, 401
-		response = {
-			'status': 'fail',
-			'message': 'Authorization is not provided'
-		}
-		return response, 500
-
-	def is_valid(value, min_length, _type):
-		message = []
-		if len(value) != 0:
-			if _type is 'text':
-				if not value.isdigit():
-					if len(value) < min_length:
-						message.append("Value should be more than {} characters".format(min_length))
-						return message
-					return True
-				message.append("Value can't be numbers")
-				return message
-		message.append("Value can't be empty")
-		return message
+				'status': "fail",
+				'message': 'Invalid credentials'
+			}
+			return response, 202	
 		
 	class ShoppingListAPI(Resource):
 
@@ -194,7 +149,6 @@ def create_app(config_name):
 				response.status_code = 202
 				return response
 			else:
-                # Return token error message
 				return user_id
 		def post(self):
 			post_data = ['title', 'description']
@@ -297,7 +251,6 @@ def create_app(config_name):
 					})
 					return response
 			else:
-                # Return token error message
 				return user_id
 
 		def delete(self, shoppinglist_id):
@@ -340,7 +293,6 @@ def create_app(config_name):
 				response.status_code = 202
 				return response
 			else:
-                # Return token error message
 				return user_id
 
 		def post(self, shoppinglist_id):
@@ -386,7 +338,6 @@ def create_app(config_name):
 					})
 					return response
 			else:
-                # Return token error message
 				return user_id
 
 	class SingleShoppingListItemAPI(Resource):
@@ -412,7 +363,6 @@ def create_app(config_name):
 				}
 				return response, 202
 			else:
-                # Return token error message
 				return user_id
 
 		def put(self, shoppinglist_id, shoppinglistitem_id):
@@ -457,7 +407,6 @@ def create_app(config_name):
 					})
 					return response
 			else:
-                # Return token error message
 				return user_id
 
 		def delete(self, shoppinglist_id, shoppinglistitem_id):
@@ -475,7 +424,6 @@ def create_app(config_name):
 				}
 				return response, 202
 			else:
-                # Return token error message
 				return user_id
 	
 	api.add_resource(Home, '/')

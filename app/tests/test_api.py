@@ -110,6 +110,19 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(wrong_cred_login.status_code, 202)
 		self.assertIn("Invalid credentials", str(wrong_cred_login.data))
 
+	def test_middleware(self):
+		"""Test a our middleware can't be broken"""
+		self.register_user()
+		mess_up_token = self.access_token() + "Mess up token"
+		response1 = self.client().get('/shoppinglists',
+			headers=dict(Authorization=mess_up_token))
+		self.assertEqual(response1.status_code, 403)
+		self.assertIn(b"Invalid token. Please log in again.", response1.data)
+		response2 = self.client().get('/shoppinglists',
+			headers=dict(Authorization=""))
+		self.assertEqual(response2.status_code, 500)
+		self.assertIn(b"Authorization is not provided", response2.data)
+
 	def test_create_shoppinglist(self):
 		"""Test user can create a shoppinglist"""
 		self.register_user()
