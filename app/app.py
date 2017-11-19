@@ -236,7 +236,7 @@ def create_app(config_name):
 							'message': 'Shopping List updated successfuly',
 							'status': 'success'
 						}
-						return response, 201
+						return response, 200
 					response = {
 						'status': "fail",
 						'message': 'Shopping List {} already exists'.format(title)
@@ -249,28 +249,32 @@ def create_app(config_name):
 						message = valid_title
 					else:
 						message = [valid_title, valid_description]
-					response = jsonify({
+					response = {
 						'message': message,
-						'status_code': 202
-					})
-					return response
+						'status': 'fail'						
+					}
+					return response, 202
 			else:
 				return user_id
 
 		def delete(self, shoppinglist_id):
-			shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
-			if shoppinglist:
-				shoppinglist.delete_shoppinglist()
+			user_id = middleware()
+			if isinstance(user_id, int):
+				shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
+				if shoppinglist:
+					shoppinglist.delete_shoppinglist()
+					response = {
+						'status': 'success',
+						'message': 'Shopping List \'{}\' deleted successfuly'.format(shoppinglist.title)
+					}
+					return response, 201
 				response = {
-					'status': 'success',
-					'message': 'Shopping List \'{}\' deleted successfuly'.format(shoppinglist.title)
+					'status': 'fail',
+					'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
 				}
-				return response, 201
-			response = {
-				'status': 'fail',
-				'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
-			}
-			return response, 202
+				return response, 202
+			else:
+				return user_id
 
 	class ShoppingListItemsAPI(Resource):
 
@@ -295,7 +299,7 @@ def create_app(config_name):
 						'status': 'success',
 						'message': "You don't have any items for now"
 					}
-					return response, 200
+					return response, 202
 				response = jsonify(results)
 				response.status_code = 202
 				return response
@@ -397,10 +401,12 @@ def create_app(config_name):
 							'item_description': shoppinglistitem.item_description,
 							'message': 'Shopping list item updated successfuly'
 						}
-						return response, 201
+						return response, 200
 					response = {
-						'message': 'Shopping List {} already exists'.format(item_title)
+						'message': 'Shopping list item {} already exists'.format(item_title),
+						'status': 'fail'
 					}
+					return response, 202
 				else:
 					if valid_item_title is True:
 						message = valid_item_description
@@ -410,6 +416,7 @@ def create_app(config_name):
 						message = [valid_item_title, valid_item_description]
 					response = jsonify({
 						'message': message,
+						'status': "fail",
 						'status_code': 202
 					})
 					return response

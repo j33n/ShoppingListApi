@@ -140,6 +140,7 @@ class ApiTestCase(unittest.TestCase):
 			data=self.shoppinglist
 		)
 		self.assertTrue('fail' in str(response2.data))
+		self.assertEqual(403, response2.status_code)
 
 		response3 = self.client().post(
 			'/shoppinglists',
@@ -271,7 +272,19 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertTrue(b"Converse and Jordan 2015" in update_resp.data)
 		self.assertTrue(b"Shopping List updated successfuly" in update_resp.data)
-		self.assertEqual(update_resp.status_code, 201)
+		self.assertEqual(update_resp.status_code, 200)
+		# Test shoppinglist can't take an existing name
+		response1 = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data={
+				'owner_id': '1',
+				'title': "My favorite shoes",
+				'description': 'Converse and Jordan 2016'
+			}
+		)
+		self.assertTrue(b"Shopping List My favorite shoes already exists" in response1.data)
+		self.assertEqual(202, response1.status_code)
 
 	def test_invalid_data_update(self):
 		"""Test user can't update with invalid format title or description"""
@@ -309,12 +322,34 @@ class ApiTestCase(unittest.TestCase):
 			'description': 'Items to cook my favorite meal'
 			}
 		)
+		response4 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': True,
+			'title': "Nyamameat",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
+		response5 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': "",
+			'title': "",
+			'description': 'Items to cook my favorite meal'
+			}
+		)
 		self.assertIn(b'Value can\'t be numbers', response1.data)
-		self.assertEqual(200, response1.status_code)
+		self.assertEqual(202, response1.status_code)
 		self.assertIn(b'Value should be more than 10 characters', response2.data)
-		self.assertEqual(200, response2.status_code)
+		self.assertEqual(202, response2.status_code)
 		self.assertIn(b'Value can\'t be empty', response3.data)
-		self.assertEqual(200, response3.status_code)
+		self.assertEqual(202, response3.status_code)
+		self.assertIn(b'fail', response4.data)
+		self.assertEqual(202, response4.status_code)
+		self.assertIn(b'fail', response5.data)
+		self.assertEqual(202, response5.status_code)
 
 
 	def test_delete_shoppinglist(self):
@@ -332,6 +367,13 @@ class ApiTestCase(unittest.TestCase):
 			'/shoppinglist/{0}'.format(results['id']),
 			headers=dict(Authorization=access_token)
 		)
+		# Test delete non existing value
+		invalid_deletion = self.client().delete(
+			'/shoppinglist/2'.format(results['id']),
+			headers=dict(Authorization=access_token)
+		)
+		self.assertIn(b"Requested value \'2\' was not found", invalid_deletion.data)
+		self.assertEqual(202, invalid_deletion.status_code)
 		self.assertFalse(b"Items to cook my favorite meal" in update_resp.data)
 		self.assertIn(b"Shopping List \'My favorite meal\' deleted successfuly", update_resp.data)
 		self.assertEqual(update_resp.status_code, 201)
@@ -347,6 +389,15 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertEqual(response.status_code, 201)
 		results = json.loads(response.data.decode())
+
+		"""Test our shopping list is empty"""
+		check_emptyness = self.client().get(
+			'/shoppinglist/1/items',
+			headers=dict(Authorization=access_token)
+		)
+		self.assertTrue(b"You don\'t have any items for now" in check_emptyness.data)
+		self.assertEqual(202, check_emptyness.status_code)
+		
 		create_item = self.client().post(
 			'/shoppinglist/{0}/items'.format(results['id']),
 			headers=dict(Authorization=access_token),
@@ -442,12 +493,28 @@ class ApiTestCase(unittest.TestCase):
 			data=self.shoppinglistitem)
 		self.assertEqual(201, create_item.status_code)
 		results1 = json.loads(create_item.data.decode())
+		# Test one can be fetched
 		get_single_item = self.client().get(
 			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
 			headers=dict(Authorization=access_token)
 		)
 		self.assertEqual(get_single_item.status_code, 201)
 		self.assertIn('Carrots and Cabbages', str(get_single_item.data))
+		# Test item title can't be duplicated
+		create_duplicate_item = self.client().post(
+			'/shoppinglist/{0}/items'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglistitem)
+		self.assertEqual(create_duplicate_item.status_code, 202)
+		self.assertIn(b'Shopping List item Vegetables already exists', create_duplicate_item.data)
+		# Test non existing items
+		get_wrong_item = self.client().get(
+			'/shoppinglist/{0}/item/3'.format(results['id'], results1['item_id']),
+			headers=dict(Authorization=access_token)
+		)
+		self.assertIn('Requested value \\\'3\\\' was not found', str(get_wrong_item.data))
+		self.assertEqual(get_wrong_item.status_code, 202)
+
 
 	def test_update_shoppinglistitem(self):
 		"""Test a user can update an item on shoppinglist"""
@@ -478,7 +545,20 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertTrue(b"Carrots and Waffles" in update_resp.data)
 		self.assertTrue(b"Shopping list item updated successfuly" in update_resp.data)
-		self.assertEqual(update_resp.status_code, 201)
+		self.assertEqual(update_resp.status_code, 200)
+		# Test updating with existing name
+		non_existing_updates = self.client().put(
+			'/shoppinglist/{}/item/4'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data={
+				'owner_id': '1',
+				'shoppinglist_id': '1',
+				'item_title': "Sausages and stuff",
+				'item_description': 'Carrots and Waffles'
+			}
+		)
+		self.assertTrue(b"Shopping list item Sausages and stuff already exists" in non_existing_updates.data)
+		self.assertEqual(non_existing_updates.status_code, 202)
 
 	def test_invalid_item_update(self):
 		"""Test user can't update item with invalid title or description"""
