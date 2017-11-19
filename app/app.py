@@ -343,11 +343,11 @@ def create_app(config_name):
 						message = valid_item_title
 					else:
 						message = [valid_item_title, valid_item_description]
-					response = jsonify({
+					response = {
 						'message': message,
-						'status_code': 202
-					})
-					return response
+						'status': 'fail'
+					}
+					return response, 202
 			else:
 				return user_id
 

@@ -273,7 +273,7 @@ class ApiTestCase(unittest.TestCase):
 		self.assertTrue(b"Converse and Jordan 2015" in update_resp.data)
 		self.assertTrue(b"Shopping List updated successfuly" in update_resp.data)
 		self.assertEqual(update_resp.status_code, 200)
-		# Test shoppinglist can't take an existing name
+		# Test shoppinglist can't take an existing name on POST
 		response1 = self.client().post(
 			'/shoppinglists',
 			headers=dict(Authorization=access_token),
@@ -285,6 +285,51 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertTrue(b"Shopping List My favorite shoes already exists" in response1.data)
 		self.assertEqual(202, response1.status_code)
+		# Test shoppinglist can't take an existing name on PUT
+		check_update = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=access_token),
+			data={
+				'title': "My favorite shoes",
+				'description': 'Converse and Jordan 2016'
+			}
+		)
+		self.assertTrue(b"Shopping List My favorite shoes already exists" in check_update.data)
+		self.assertEqual(202, check_update.status_code)
+		# Test invalid use of data on PUT
+		check_wrong_update_1 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=access_token),
+			data={
+				'title': "666",
+				'description': 'Converse and Jordan 2016'
+			}
+		)
+		check_wrong_update_2 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=access_token),
+			data={
+				'title': 'Fish',
+				'description': 'Converse and Jordan 2016'
+			}
+		)
+		check_wrong_update_3 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=access_token),
+			data={
+				'title': '56',
+				'description': 'aaaa'
+			}
+		)
+
+		self.assertIn(b"Value can\'t be numbers", check_wrong_update_1.data)
+		self.assertEqual(202, check_wrong_update_1.status_code)
+		self.assertIn(b"Value should be more than 10 characters", check_wrong_update_2.data)
+		self.assertEqual(202, check_wrong_update_2.status_code)
+		self.assertIn(b"Value should be more than 10 characters", check_wrong_update_3.data)
+		self.assertIn(b"Value can\'t be numbers", check_wrong_update_3.data)
+		self.assertEqual(202, check_wrong_update_3.status_code)
+
 
 	def test_invalid_data_update(self):
 		"""Test user can't update with invalid format title or description"""
@@ -397,6 +442,33 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertTrue(b"You don\'t have any items for now" in check_emptyness.data)
 		self.assertEqual(202, check_emptyness.status_code)
+
+		# Test invalid values are not saved
+		create_invalid_item = self.client().post(
+			'/shoppinglist/{0}/items'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data={
+				'owner_id': '1',
+				'shoppinglist_id': '1',
+				'item_title': "",
+				'item_description': 'Carrots and Cabbages'
+				}
+			)
+		self.assertIn(b'Value can\'t be empty', create_invalid_item.data)
+		self.assertEqual(202, create_invalid_item.status_code)
+
+		create_invalid_item_2 = self.client().post(
+			'/shoppinglist/{0}/items'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data={
+				'owner_id': '1',
+				'shoppinglist_id': '1',
+				'item_title': "Carrots and Cabbages",
+				'item_description': '66666'
+				}
+			)
+		self.assertIn(b'Value can\'t be numbers', create_invalid_item_2.data)
+		self.assertEqual(202, create_invalid_item_2.status_code)
 		
 		create_item = self.client().post(
 			'/shoppinglist/{0}/items'.format(results['id']),
@@ -447,11 +519,11 @@ class ApiTestCase(unittest.TestCase):
 			}
 		)
 		self.assertIn(b'Value can\'t be numbers', response1.data)
-		self.assertEqual(200, response1.status_code)
+		self.assertEqual(202, response1.status_code)
 		self.assertIn(b'Value should be more than 10 characters', response2.data)
-		self.assertEqual(200, response2.status_code)
+		self.assertEqual(202, response2.status_code)
 		self.assertIn(b'Value can\'t be empty', response3.data)
-		self.assertEqual(200, response3.status_code)
+		self.assertEqual(202, response3.status_code)
 
 	def test_get_all_shoppinglist_items(self):
 		"""Test that a user can get all items on a shoppiglist"""
