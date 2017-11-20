@@ -321,6 +321,14 @@ class ApiTestCase(unittest.TestCase):
 				'description': 'aaaa'
 			}
 		)
+		check_wrong_update_4 = self.client().put(
+			'/shoppinglist/1',
+			headers=dict(Authorization=access_token),
+			data={
+				'title': 'Converse and Jordan 2016',
+				'description': 'Shoe'
+			}
+		)
 
 		self.assertIn(b"Value can\'t be numbers", check_wrong_update_1.data)
 		self.assertEqual(202, check_wrong_update_1.status_code)
@@ -329,6 +337,8 @@ class ApiTestCase(unittest.TestCase):
 		self.assertIn(b"Value should be more than 10 characters", check_wrong_update_3.data)
 		self.assertIn(b"Value can\'t be numbers", check_wrong_update_3.data)
 		self.assertEqual(202, check_wrong_update_3.status_code)
+		self.assertIn(b"Value should be more than 10 characters", check_wrong_update_4.data)
+		self.assertEqual(202, check_wrong_update_4.status_code)
 
 
 	def test_invalid_data_update(self):
@@ -477,6 +487,20 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertIn(b'Vegetables', create_item.data)
 		self.assertEqual(201, create_item.status_code)
+
+		create_invalid_item_2 = self.client().post(
+			'/shoppinglist/{0}/items'.format(results['id']),
+			headers=dict(Authorization=access_token),
+			data={
+				'owner_id': '1',
+				'shoppinglist_id': '1',
+				'item_title': "Carrots",
+				'item_description': '66666'
+				}
+		)
+		self.assertIn(b'Value should be more than 10 characters', create_invalid_item_2.data)
+		self.assertIn(b'Value can\'t be numbers', create_invalid_item_2.data)
+		self.assertEqual(202, create_invalid_item_2.status_code)
 
 	def test_invalid_item_value(self):
 		"""Test user can't update with invalid format title or description"""
@@ -685,16 +709,29 @@ class ApiTestCase(unittest.TestCase):
 			data={
 			'owner_id': '1',
 			'shoppinglist_id': results['id'],
-			'item_title': "",
-			'item_description': 'Carrots and Tomatoes'
+			'item_title': "Carrots and Tomatoes",
+			'item_description': ''
+			}
+		)
+		response4 = self.client().put(
+			'/shoppinglist/{0}/item/{1}'.format(results['id'], results1['item_id']),
+			headers=dict(Authorization=self.access_token()),
+			data={
+			'owner_id': '1',
+			'shoppinglist_id': results['id'],
+			'item_title': "9999",
+			'item_description': "Fish"
 			}
 		)
 		self.assertIn(b'Value can\'t be numbers', response1.data)
-		self.assertEqual(200, response1.status_code)
+		self.assertEqual(202, response1.status_code)
 		self.assertIn(b'Value should be more than 10 characters', response2.data)
-		self.assertEqual(200, response2.status_code)
+		self.assertEqual(202, response2.status_code)
 		self.assertIn(b'Value can\'t be empty', response3.data)
-		self.assertEqual(200, response3.status_code)
+		self.assertEqual(202, response3.status_code)
+		self.assertIn(b'Value can\'t be numbers', response4.data)
+		self.assertIn(b'Value should be more than 10 characters', response4.data)
+		self.assertEqual(202, response4.status_code)
 
 	def test_delete_shoppinglistitem(self):
 		"""Test a user can delete an item on a shopping list"""
@@ -742,21 +779,43 @@ class ApiTestCase(unittest.TestCase):
 	def test_token_unprovided(self):
 		"""Test a token is always provided on login"""
 		self.register_user()
-		access_token = self.access_token()
-		response = self.client().get(
-			'/shoppinglists'
-			)
-		self.assertIn(b"Authorization is not provided", response.data)
+		url_list_get = ['/shoppinglists', '/shoppinglist/1', '/shoppinglist/1/items', '/shoppinglist/1/item/1']
+		for url in url_list_get:
+			response = self.client().get(
+				url
+				)
+			self.assertIn(b"Authorization is not provided", response.data)
+			self.assertEqual(response.status_code, 500)
+		url_list_post = ['/shoppinglists', '/shoppinglist/1/items']
+		for post_url in url_list_post:
+			# Test post requests without Authorization
+			response2 = self.client().post(
+				post_url
+				)
+			self.assertIn(b"Authorization is not provided", response2.data)
+			self.assertEqual(response2.status_code, 500)
+		url_list_put = ['/shoppinglist/1', '/shoppinglist/1/item/1']
+		for put_url in url_list_put:
+			# Test put requests without Authorization
+			response3 = self.client().put(
+				put_url
+				)
+			self.assertIn(b"Authorization is not provided", response3.data)
+			self.assertEqual(response3.status_code, 500)
+		url_list_delete = ['/shoppinglist/1', '/shoppinglist/2/item/2']
+		for delete_url in url_list_delete:
+			# Test delete requests without Authorization
+			response4 = self.client().delete(
+				delete_url
+				)
+			self.assertIn(b"Authorization is not provided", response4.data)
+			self.assertEqual(response4.status_code, 500)
 
 	def test_welcome_page(self):
 		"""Test welcome page"""
 		response = self.client().get('/')
 		self.assertTrue(b"Welcome to Shopping List API" in response.data)
 		self.assertEqual(response.status_code, 200)
-
-
-
-
 
 
 	def tearDown(self):

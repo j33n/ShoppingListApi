@@ -308,7 +308,7 @@ def create_app(config_name):
 
 		def post(self, shoppinglist_id):
 			user_id = middleware()
-			if user_id:
+			if isinstance(user_id, int):
 				post_data = ['item_title', 'item_description']
 				for arg in range(len(post_data)):
 					parser.add_argument(post_data[arg])
@@ -416,10 +416,9 @@ def create_app(config_name):
 						message = [valid_item_title, valid_item_description]
 					response = jsonify({
 						'message': message,
-						'status': "fail",
-						'status_code': 202
+						'status': "fail"
 					})
-					return response
+					return make_response(response, 202)
 			else:
 				return user_id
 
