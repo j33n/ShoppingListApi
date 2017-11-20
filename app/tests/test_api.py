@@ -3,7 +3,6 @@ import os
 import json
 from flask import Flask
 from app.app import create_app, db
-from app.models import Users, UserToken
 
 class ApiTestCase(unittest.TestCase):
 	"""User test case"""
