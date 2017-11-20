@@ -28,19 +28,16 @@ class Users(db.Model):
 
     def encode_token(self, user_id):
         """Generates the Auth Token"""
-        try:
-            payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
-                'iat': datetime.datetime.utcnow(),
-                'sub': user_id
-            }
-            return jwt.encode(
-                payload,
-                current_app.config.get('SECRET_KEY'),
-                algorithm='HS256'
-            )
-        except Exception as e:
-            return str(e)
+        payload = {
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
+            'iat': datetime.datetime.utcnow(),
+            'sub': user_id
+        }
+        return jwt.encode(
+            payload,
+            current_app.config.get('SECRET_KEY'),
+            algorithm='HS256'
+        )
 
     @staticmethod
     def decode_token(user_id):
