@@ -27,9 +27,9 @@ class ModelsTestCase(unittest.TestCase):
 		# Test Shoppinglist model presentation
 		self.assertEquals(str(shoppinglist), "<title Yellow Bananas")
 
-	def test_shoppinglist_model(self):
+	def test_shoppinglistitem_model(self):
 		shoppinglistitem = self.shoppinglistitem
-		# Test Shoppinglist model presentation
+		# Test Shoppinglistitem model presentation
 		self.assertEquals(str(shoppinglistitem), "<item_title Yellow Bananas with green")
 
 
