@@ -29,7 +29,7 @@ class Users(db.Model):
     def encode_token(self, user_id):
         """Generates the Auth Token"""
         payload = {
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
             'iat': datetime.datetime.utcnow(),
             'sub': user_id
         }

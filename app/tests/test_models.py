@@ -36,7 +36,6 @@ class ModelsTestCase(unittest.TestCase):
 	def test_user_token_model(self):
 		usertoken = self.usertoken
 		# Test Shopping list item model presentation
-		print(usertoken)
 		self.assertEquals(str(usertoken), "<token: a_certain_token")
 
 

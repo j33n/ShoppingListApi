@@ -1,6 +1,7 @@
 import unittest
 import os
 import json
+import time
 from flask import Flask
 from app.app import create_app, db
 
@@ -809,6 +810,20 @@ class ApiTestCase(unittest.TestCase):
 				)
 			self.assertIn(b"Authorization is not provided", response4.data)
 			self.assertEqual(response4.status_code, 500)
+	def test_token_expiration(self):
+		""" Test if a token has expired after a certain time"""
+		self.register_user()
+		# login_user = self.login_user()
+		# self.assertIn(b"Successfully logged in.", login_user.data)
+		# self.assertEquals(200, login_user.status_code)
+		access_token = self.access_token()
+		time.sleep(6)
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertIn(b"Signature expired. Please log in again.", response.data)
 
 	def test_welcome_page(self):
 		"""Test welcome page"""
