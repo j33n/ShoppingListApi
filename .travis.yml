@@ -1,6 +1,3 @@
-global:
-  - CC_TEST_REPORTER_ID=607593123dc36187666d5efa75c6e3305e9055cbc3b83472b760945ebdb198a2
-
 language: python
 
 python:
@@ -17,18 +14,11 @@ services:
 before_script:
   - psql -c "CREATE USER test_user WITH PASSWORD 'postgres';" -U postgres
   - psql -c "CREATE DATABASE shoppinglist_test owner test_user;" -U postgres
-  - psql -c "CREATE DATABASE shoppinglist owner test_user;" -U postgres  
-  # Add code climate coverage
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
+  - psql -c "CREATE DATABASE shoppinglist owner test_user;" -U postgres
  
 
 script:
   - coverage run --source=app -m py.test && coverage report
   - coveralls
-  - bundle exec rspec
 after_sucess:
   - coveralls
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-  
