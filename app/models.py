@@ -81,7 +81,7 @@ class UserToken(db.Model):
             return False
 
     def __repr__(self):
-        return '<id: token: {}'.format(self.token)
+        return '<token: {}'.format(self.token)
 
 class ShoppingList(db.Model):
     """Model for Shopping Lists"""
@@ -104,10 +104,6 @@ class ShoppingList(db.Model):
     def save_shoppinglist(self):
         db.session.add(self)
         db.session.commit()
-
-    @staticmethod
-    def get_all_shoppinglists():
-        return ShoppingList.query.all()
 
     def delete_shoppinglist(self):
         db.session.delete(self)
@@ -139,10 +135,6 @@ class ShoppingListItem(db.Model):
     def save_shoppinglistitem(self):
         db.session.add(self)
         db.session.commit()
-
-    @staticmethod
-    def get_all_shoppinglistitems():
-        return ShoppingListItem.query.all()
 
     def delete_shoppinglistitem(self):
         db.session.delete(self)
