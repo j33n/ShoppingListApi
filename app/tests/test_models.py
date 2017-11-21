@@ -24,12 +24,12 @@ class ModelsTestCase(unittest.TestCase):
 
 	def test_shoppinglist_model(self):
 		shoppinglist = self.shoppinglist
-		# Test Shoppinglist model presentation
+		# Test Shopping list model presentation
 		self.assertEquals(str(shoppinglist), "<title Yellow Bananas")
 
 	def test_shoppinglistitem_model(self):
 		shoppinglistitem = self.shoppinglistitem
-		# Test Shoppinglistitem model presentation
+		# Test Shopping list item model presentation
 		self.assertEquals(str(shoppinglistitem), "<item_title Yellow Bananas with green")
 
 
