@@ -83,7 +83,7 @@ def create_app(config_name):
 						'date_created': user.date_created,
 						'message': 'User account created successfuly'
 					})
-					response.status_code = 201
+					response.status_code = 200
 					return response
 				response = jsonify({
 	                'status': 'fail',

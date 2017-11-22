@@ -53,7 +53,7 @@ class ApiTestCase(unittest.TestCase):
 	def test_user_creation(self):
 		"""Test we can create a user"""
 		response = self.register_user()
-		self.assertEqual(response.status_code, 201)
+		self.assertEqual(response.status_code, 200)
 		self.assertIn("User account created successfuly", str(response.data))
 
 	def test_password_mismatch(self):
@@ -79,7 +79,7 @@ class ApiTestCase(unittest.TestCase):
 	def test_account_duplicate(self):
 		"""Test users can't create similar accounts"""
 		response = self.register_user()
-		self.assertEqual(response.status_code, 201)
+		self.assertEqual(response.status_code, 200)
 		self.assertIn("User account created successfuly", str(response.data))
 		response1 = self.register_user()
 		self.assertEqual(response1.status_code, 202)
@@ -846,6 +846,17 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertIn(b"Token created. Please log in again.", response.data)
 		self.assertTrue(403, response.status_code)
+
+	def test_logout_invalid_token(self):
+		"""Test a logout requires a valid token"""
+		self.register_user()
+		mess_up_token = self.access_token() + "Mess up token"
+		logout_response = self.client().post(
+			'/auth/logout',
+			headers=dict(Authorization=mess_up_token)
+		)
+		self.assertEqual(logout_response.status_code, 403)
+		self.assertIn(b"Invalid token. Please log in again.", logout_response.data)
 
 	def test_token_expiration(self):
 		""" Test if a token has expired after a certain time"""
