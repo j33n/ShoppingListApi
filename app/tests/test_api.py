@@ -17,7 +17,9 @@ class ApiTestCase(unittest.TestCase):
 			'username': 'Stallion',
 			'email': 'rocky@test.com',
 			'password': 'secret',
-			'confirm_password': 'secret'
+			'confirm_password': 'secret',
+			'question': 'What is your favorite pet name?',
+			'answer': 'Tiger'
 		}
 		self.shoppinglist = {
 		'owner_id': '1',
@@ -91,7 +93,9 @@ class ApiTestCase(unittest.TestCase):
 			'username': 'Stallion',
 			'email': '',
 			'password': 'secret',
-			'confirm_password': 'secret'
+			'confirm_password': 'secret',
+			'question': 'What is your pet name?',
+			'answer': 'Tiger'
 		})
 		self.assertEqual(response.status_code, 500)
 		self.assertIn(b"Email or Username can\'t be empty.", response.data)
@@ -858,11 +862,90 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(logout_response.status_code, 403)
 		self.assertIn(b"Invalid token. Please log in again.", logout_response.data)
 
+	def test_question(self):
+		"""Test user's question to reset password"""
+		create_question = self.register_user()
+		# Test create question
+		self.assertIn(b"User account created successfuly", create_question.data)
+		self.assertTrue(200, create_question.data)
+		# Test create an invalid question
+		create_invalid_question = self.client().post(
+			'/auth/register', data={
+				'username': 'Stallion',
+				'email': 'rocky@test.com',
+				'password': 'secret',
+				'confirm_password': 'secret',
+				'question': 'What is your favorite pet name',
+				'answer': ''
+			}
+		)
+		self.assertIn(b"Please set a security question!!", create_invalid_question.data)
+		self.assertTrue(202, create_invalid_question.status_code)
+
+	def test_reset_password(self):
+		"""Test a user can reset password using a security question"""
+		register_user = self.register_user()
+		self.assertIn("User account created successfuly", str(register_user.data))
+		access_token = self.access_token()
+		reset_password = self.client().post(
+			'/resetpassword',
+			headers=dict(Authorization=access_token),
+			data={
+			'question':'What is your favorite pet name?',
+			'answer': 'Tiger',
+			'old_password': 'secret',
+			'new_password': '123456'
+			}
+		)
+		self.assertTrue(200, reset_password.status_code)
+		self.assertIn(b'Your password was resetted successfuly', reset_password.data)
+		invalid_security_question = self.client().post(
+			'/resetpassword',
+			headers=dict(Authorization=access_token),
+			data={
+			'question':'',
+			'answer': 'Tiger',
+			'old_password': 'secret',
+			'new_password': '123456'
+			}
+		)
+		self.assertTrue(202, invalid_security_question.status_code)
+		self.assertIn(b'Invalid security question, please try again!', invalid_security_question.data)
+		# Test a user is not using a wrong previous password
+		check_invalid_oldpassword = self.client().post(
+			'/resetpassword',
+			headers=dict(Authorization=access_token),
+			data={
+			'question':'What is your favorite pet name?',
+			'answer': 'Tiger',
+			'old_password': 'secret_society',
+			'new_password': '123456'
+			}
+		)
+		self.assertTrue(202, check_invalid_oldpassword.status_code)
+		self.assertIn(b'Invalid password!!', check_invalid_oldpassword.data)
+		# Logout the user to test the new password
+		logout_user = self.client().post(
+			'/auth/logout',
+			headers=dict(Authorization=access_token)
+		)
+		self.assertIn(b'Successfully logged out.', logout_user.data)
+		# Test a user can login with his new password
+		use_new_password = self.client().post('/auth/login', data={
+			'email':'rocky@test.com',
+			'password':'123456'
+			}
+		)
+		self.assertEqual(200, use_new_password.status_code)
+		self.assertIn(b'', use_new_password.data)
+
+
+
 	def test_token_expiration(self):
 		""" Test if a token has expired after a certain time"""
 		self.register_user()
 		access_token = self.access_token()
-		time.sleep(61)
+		time.sleep(6)
 		response = self.client().post(
 			'/shoppinglists',
 			headers=dict(Authorization=access_token),

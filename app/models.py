@@ -14,13 +14,17 @@ class Users(db.Model):
     username = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
+    question = db.Column(db.String(255), nullable=False)
+    answer = db.Column(db.String(255), nullable=False)
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    def __init__(self, username, email, password):
+    def __init__(self, username, email, password, question, answer):
         """Initialize with username, email and password"""
         self.username = username
         self.email = email
         self.password = password
+        self.question = question
+        self.answer = answer
 
     def save_user(self):
         db.session.add(self)
@@ -29,7 +33,7 @@ class Users(db.Model):
     def encode_token(self, user_id):
         """Generates the Auth Token"""
         payload = {
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=60),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
             'iat': datetime.datetime.utcnow(),
             'sub': user_id
         }

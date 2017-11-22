@@ -10,7 +10,13 @@ class ModelsTestCase(unittest.TestCase):
 
 	def setUp(self):
 		self.app = create_app(config_name="testing")
-		self.user = Users(username="John Doe", email="johndoe@sl.com", password="secret")
+		self.user = Users(
+			username="John Doe",
+			email="johndoe@sl.com",
+			password="secret",
+			question="What is the name of your pet?",
+			answer="Beast"
+		)
 		self.shoppinglist = ShoppingList(owner_id="1", title="Yellow Bananas", description="johndoe@sl.com")
 		self.shoppinglistitem = ShoppingListItem(owner_id="1", shoppinglist_id="1", item_title="Yellow Bananas with green", item_description="And maracuja")
 		self.usertoken = UserToken(token="a_certain_token")

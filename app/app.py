@@ -41,7 +41,7 @@ def create_app(config_name):
 
 		def post(self):
 			# Get data posted
-			post_data = ['username', 'email', 'password', 'confirm_password']
+			post_data = ['username', 'email', 'password', 'confirm_password', 'question', 'answer']
 			for arg in range(len(post_data)):
 				parser.add_argument(post_data[arg])
 			args = parser.parse_args()
@@ -67,30 +67,40 @@ def create_app(config_name):
 
 			email = args['email']
 			username = args['username']
+			question = args['question']
+			answer = args['answer']
+			valid_question = is_valid(value=question, min_length=4, _type="text")
+			valid_answer = is_valid(value=answer, min_length=4, _type="text")
 			if email and username:
-				# Get user from db
-				check_user = Users.query.filter_by(email=email).first()
-				# Check user account exists
-				if check_user is None:	
-					user = Users(username=username, email=email, password=password)
-					# Save user
-					user.save_user()
-					# Return Response
+				if valid_question is True and valid_answer is True:
+					# Get user from db
+					check_user = Users.query.filter_by(email=email).first()
+					# Check user account exists
+					if check_user is None:	
+						user = Users(username=username, email=email, password=password, question=question, answer=answer)
+						# Save user
+						user.save_user()
+						# Return Response
+						response = jsonify({
+							'id': user.id,
+							'username': user.username,
+							'email': user.email,
+							'date_created': user.date_created,
+							'message': 'User account created successfuly'
+						})
+						response.status_code = 200
+						return response
 					response = jsonify({
-						'id': user.id,
-						'username': user.username,
-						'email': user.email,
-						'date_created': user.date_created,
-						'message': 'User account created successfuly'
-					})
-					response.status_code = 200
+		                'status': 'fail',
+		                'message': 'User account already exists.',
+		            })
+					response.status_code = 202
 					return response
 				response = jsonify({
-	                'status': 'fail',
-	                'message': 'User account already exists.',
-	            })
-				response.status_code = 202
-				return response
+					'status': 'fail',
+					'message': 'Please set a security question!!'
+				})
+				return make_response(response, 202)
 			response = jsonify({
                 'status': 'fail',
                 'message': 'Email or Username can\'t be empty.',
@@ -151,6 +161,44 @@ def create_app(config_name):
 				'message': 'Authorization is not provided'
 			}
 			return response, 500
+
+	class ResetPassowrd(Resource):
+		"""Allow a user to reset a password using a security question"""
+		def post(self):
+			user_id = middleware()					
+			if isinstance(user_id, int):
+				# Get data posted
+				post_data = ['question', 'answer', 'old_password', 'new_password']
+				for arg in range(len(post_data)):
+					parser.add_argument(post_data[arg])
+				args = parser.parse_args()
+				user = Users.query.filter_by(id=user_id).first()
+				if user.question == args['question'] and user.answer == args['answer']:
+					check_old_password = bcrypt.check_password_hash(user.password, args['old_password'])
+					if check_old_password:
+						make_new_password = bcrypt.generate_password_hash(
+							args['new_password'], app.config.get('BCRYPT_LOG_ROUNDS')
+							).decode('utf-8')
+						user.password = make_new_password
+						user.save_user()
+						invalid_old_password = jsonify({
+							'status': 'fail',
+							'message': 'Your password was resetted successfuly'
+						})
+						return make_response(invalid_old_password, 200)
+					invalid_old_password = jsonify({
+						'status': 'fail',
+						'message': 'Invalid password!!'
+					})
+					return make_response(invalid_old_password, 202)
+				invalid_question = jsonify({
+					'status': 'fail',
+					'message': 'Invalid security question, please try again!'
+				})
+				return make_response(invalid_question, 202)
+			else:
+				return user_id
+
 		
 	class ShoppingListAPI(Resource):
 
@@ -214,7 +262,6 @@ def create_app(config_name):
 				return response, 202
 			else:
 				return user_id
-
 
 	class SingleShoppingListAPI(Resource):	
 
@@ -472,6 +519,7 @@ def create_app(config_name):
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
 	api.add_resource(Logout, '/auth/logout')
+	api.add_resource(ResetPassowrd, '/resetpassword')
 	api.add_resource(ShoppingListAPI, '/shoppinglists')
 	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
 	api.add_resource(ShoppingListItemsAPI, '/shoppinglist/<int:shoppinglist_id>/items', endpoint='shoppinglistitems')
