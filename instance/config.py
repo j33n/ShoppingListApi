@@ -13,7 +13,6 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     BCRYPT_LOG_ROUNDS = 13
     DEBUG = False
-    TOKEN_EXPIRATION_TIME = 
 
 class DevelopmentConfig(Config):
     """Development configurations"""

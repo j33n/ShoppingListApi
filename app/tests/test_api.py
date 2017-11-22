@@ -4,6 +4,7 @@ import json
 import time
 from flask import Flask
 from app.app import create_app, db
+from app.models import Users
 
 class ApiTestCase(unittest.TestCase):
 	"""User test case"""
@@ -786,7 +787,7 @@ class ApiTestCase(unittest.TestCase):
 				)
 			self.assertIn(b"Authorization is not provided", response.data)
 			self.assertEqual(response.status_code, 500)
-		url_list_post = ['/shoppinglists', '/shoppinglist/1/items']
+		url_list_post = ['/shoppinglists', '/shoppinglist/1/items', 'auth/logout']
 		for post_url in url_list_post:
 			# Test post requests without Authorization
 			response2 = self.client().post(
@@ -810,26 +811,53 @@ class ApiTestCase(unittest.TestCase):
 				)
 			self.assertIn(b"Authorization is not provided", response4.data)
 			self.assertEqual(response4.status_code, 500)
-	def test_token_expiration(self):
-		""" Test if a token has expired after a certain time"""
-		self.register_user()
-		# login_user = self.login_user()
-		# self.assertIn(b"Successfully logged in.", login_user.data)
-		# self.assertEquals(200, login_user.status_code)
-		access_token = self.access_token()
-		time.sleep(6)
-		response = self.client().post(
-			'/shoppinglists',
-			headers=dict(Authorization=access_token),
-			data=self.shoppinglist
-		)
-		self.assertIn(b"Signature expired. Please log in again.", response.data)
+	
 
 	def test_welcome_page(self):
 		"""Test welcome page"""
 		response = self.client().get('/')
 		self.assertTrue(b"Welcome to Shopping List API" in response.data)
 		self.assertEqual(response.status_code, 200)
+
+	def test_valid_logout(self):
+		"""Test a user can logout smoothly"""
+		self.register_user()
+		access_token = self.access_token()
+		logout_response = self.client().post(
+			'/auth/logout',
+			headers=dict(Authorization=access_token)
+		)
+		self.assertIn(b"Successfully logged out.", logout_response.data)
+		self.assertEquals(200, logout_response.status_code)
+
+	def test_token_duplicate(self):
+		"""Test that a token can't be used twice ever"""
+		self.register_user()
+		access_token = self.access_token()
+		logout_response = self.client().post(
+			'/auth/logout',
+			headers=dict(Authorization=access_token)
+		)
+		self.assertIn(b"Successfully logged out.", logout_response.data)
+		self.assertEquals(200, logout_response.status_code)
+		response = self.client().get(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token)
+		)
+		self.assertIn(b"Token created. Please log in again.", response.data)
+		self.assertTrue(403, response.status_code)
+
+	def test_token_expiration(self):
+		""" Test if a token has expired after a certain time"""
+		self.register_user()
+		access_token = self.access_token()
+		time.sleep(61)
+		response = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertIn(b"Signature expired. Please log in again.", response.data)
 
 
 	def tearDown(self):

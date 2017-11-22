@@ -18,7 +18,7 @@ JWT_EXP_DELTA_SECONDS = 20
 
 
 def create_app(config_name):
-	from app.models import Users, ShoppingList, ShoppingListItem
+	from app.models import Users, ShoppingList, ShoppingListItem, UserToken
 	from app.helpers import middleware, is_valid
 	app = Flask(__name__, instance_relative_config=True)
 	api = Api(app)
@@ -121,7 +121,36 @@ def create_app(config_name):
 				'status': "fail",
 				'message': 'Invalid credentials'
 			}
-			return response, 202	
+			return response, 202
+
+	class Logout(Resource):
+
+		def post(self):
+			auth_header = request.headers.get('Authorization')
+			if auth_header:
+				access_token = auth_header.split(" ")[1]
+				user_id = Users.decode_token(access_token)
+				if not isinstance(user_id, int):
+					response = {
+						'status': 'fail',
+						'message': user_id
+					}
+					return response, 403
+				else:
+					save_used_token = UserToken(token=access_token)
+					# insert the token
+					db.session.add(save_used_token)
+					db.session.commit()
+					responseObject = {
+						'status': 'success',
+						'message': 'Successfully logged out.'
+					}
+					return make_response(jsonify(responseObject), 200)
+			response = {
+				'status': 'fail',
+				'message': 'Authorization is not provided'
+			}
+			return response, 500
 		
 	class ShoppingListAPI(Resource):
 
@@ -442,6 +471,7 @@ def create_app(config_name):
 	api.add_resource(Home, '/')
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
+	api.add_resource(Logout, '/auth/logout')
 	api.add_resource(ShoppingListAPI, '/shoppinglists')
 	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
 	api.add_resource(ShoppingListItemsAPI, '/shoppinglist/<int:shoppinglist_id>/items', endpoint='shoppinglistitems')
