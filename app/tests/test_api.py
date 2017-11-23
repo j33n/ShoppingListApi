@@ -983,6 +983,41 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertEqual(202, wrong_password_userupdate.status_code)
 		self.assertIn(b"You need your password to update account info.", wrong_password_userupdate.data)
+		# check invalid new username
+		update_user = self.client().put('/user',
+			headers=dict(Authorization=access_token),
+			data={
+			'new_email': 'johndoe@test.com',
+			'new_username':'566',
+			'password': 'secret'
+			}
+		)
+		self.assertEqual(202, update_user.status_code)
+		self.assertIn(b"Value can\'t be numbers", update_user.data)
+		# check invalid new username
+		update_user_1 = self.client().put('/user',
+			headers=dict(Authorization=access_token),
+			data={
+			'new_email': 'joh',
+			'new_username':'John Doe',
+			'password': 'secret'
+			}
+		)
+		self.assertEqual(202, update_user_1.status_code)
+		self.assertIn(b"Value should be more than 5 characters", update_user_1.data)
+		# check invalid new username
+		update_user_2 = self.client().put('/user',
+			headers=dict(Authorization=access_token),
+			data={
+			'new_email': '56789',
+			'new_username':'John',
+			'password': 'secret'
+			}
+		)
+		print(type(update_user_2.data.decode()))
+		self.assertIn(b"Value should be more than 5 characters", update_user_2.data)
+		self.assertIn(b"Value can\'t be numbers", update_user_2.data)
+		self.assertEquals(202, update_user_2.status_code)
 		# check email and username were updated
 		check_update = self.client().get('/user', headers=dict(Authorization=access_token))
 		self.assertEqual(200, check_update.status_code)

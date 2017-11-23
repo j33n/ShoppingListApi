@@ -244,11 +244,18 @@ def create_app(config_name):
 							'new_email': new_email
 						})
 						return make_response(response, 200)
-					response = jsonify({
-						'status': 'fail',
-						'message': 'Invalid value provided!!'
-					})
-					return make_response(response, 202)
+					else:
+						if valid_new_username is True:
+							message = valid_new_email
+						elif valid_new_email is True:
+							message = valid_new_username
+						else:
+							message = [valid_new_username, valid_new_email]
+						response = jsonify({
+							'message': message,
+							'status': 'fail'						
+						})
+						return make_response(response, 202)
 				response = jsonify({
 					'status': 'fail',
 					'message': 'You need your password to update account info.'
