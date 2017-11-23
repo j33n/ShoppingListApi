@@ -57,6 +57,15 @@ class ApiTestCase(unittest.TestCase):
 		response = self.register_user()
 		self.assertEqual(response.status_code, 200)
 		self.assertIn("User account created successfuly", str(response.data))
+		# Test a user can't be created when a question is not set
+		check_security_question = self.client().post('/auth/register', data={
+			'username': 'Stallion',
+			'email': 'rocky@test.com',
+			'password': 'secret',
+			'confirm_password': 'secret'
+		})
+		self.assertEqual(check_security_question.status_code, 202)
+		self.assertIn("Please provide a security question!!", str(check_security_question.data))
 
 	def test_password_mismatch(self):
 		"""Test user creates an account when he confirms password"""
@@ -784,7 +793,7 @@ class ApiTestCase(unittest.TestCase):
 	def test_token_unprovided(self):
 		"""Test a token is always provided on login"""
 		self.register_user()
-		url_list_get = ['/shoppinglists', '/shoppinglist/1', '/shoppinglist/1/items', '/shoppinglist/1/item/1']
+		url_list_get = ['/shoppinglists', '/shoppinglist/1', '/shoppinglist/1/items', '/shoppinglist/1/item/1', '/user']
 		for url in url_list_get:
 			response = self.client().get(
 				url
@@ -799,7 +808,7 @@ class ApiTestCase(unittest.TestCase):
 				)
 			self.assertIn(b"Authorization is not provided", response2.data)
 			self.assertEqual(response2.status_code, 500)
-		url_list_put = ['/shoppinglist/1', '/shoppinglist/1/item/1']
+		url_list_put = ['/shoppinglist/1', '/shoppinglist/1/item/1', '/user']
 		for put_url in url_list_put:
 			# Test put requests without Authorization
 			response3 = self.client().put(
@@ -876,10 +885,10 @@ class ApiTestCase(unittest.TestCase):
 				'password': 'secret',
 				'confirm_password': 'secret',
 				'question': 'What is your favorite pet name',
-				'answer': ''
+				'answer': '1'
 			}
 		)
-		self.assertIn(b"Please set a security question!!", create_invalid_question.data)
+		self.assertIn(b"Invalid security question!!", create_invalid_question.data)
 		self.assertTrue(202, create_invalid_question.status_code)
 
 	def test_reset_password(self):
@@ -899,6 +908,21 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertTrue(200, reset_password.status_code)
 		self.assertIn(b'Your password was resetted successfuly', reset_password.data)
+		# Test reset password requires an authorization
+		mess_up_token = access_token + "Mess up token"
+		chech_authorization = self.client().post(
+			'/resetpassword',
+			headers=dict(Authorization=mess_up_token),
+			data={
+			'question':'What is your favorite pet name?',
+			'answer': 'Tiger',
+			'old_password': 'secret',
+			'new_password': '123456'
+			}
+		)
+		self.assertTrue(200, chech_authorization.status_code)
+		self.assertIn(b'Invalid token. Please log in again.', chech_authorization.data)
+		# Test question can not be empty
 		invalid_security_question = self.client().post(
 			'/resetpassword',
 			headers=dict(Authorization=access_token),
@@ -939,6 +963,31 @@ class ApiTestCase(unittest.TestCase):
 		self.assertEqual(200, use_new_password.status_code)
 		self.assertIn(b'', use_new_password.data)
 
+	def test_update_accountinfo(self):
+		""" Test a user can change username and email"""
+		self.register_user()
+		access_token = self.access_token()
+		# change user information
+		change_userinfo = self.client().put('/user',
+			headers=dict(Authorization=access_token),
+			data={'new_email': 'johndoe@test.com', 'new_username':'John Doe', 'password': 'secret'})
+		self.assertEqual(200, change_userinfo.status_code)
+		self.assertIn(b"Account information changed successfuly", change_userinfo.data)
+		# check update can't happen without password
+		wrong_password_userupdate = self.client().put('/user',
+			headers=dict(Authorization=access_token),
+			data={
+			'new_email': 'johndoe@test.com',
+			'new_username':'John Doe',
+			'password': 'my_wrong_password'}
+		)
+		self.assertEqual(202, wrong_password_userupdate.status_code)
+		self.assertIn(b"You need your password to update account info.", wrong_password_userupdate.data)
+		# check email and username were updated
+		check_update = self.client().get('/user', headers=dict(Authorization=access_token))
+		self.assertEqual(200, check_update.status_code)
+		self.assertIn(b"johndoe@test.com", check_update.data)
+		self.assertIn(b"John Doe", check_update.data)
 
 
 	def test_token_expiration(self):

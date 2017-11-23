@@ -68,45 +68,50 @@ def create_app(config_name):
 			email = args['email']
 			username = args['username']
 			question = args['question']
-			answer = args['answer']
-			valid_question = is_valid(value=question, min_length=4, _type="text")
-			valid_answer = is_valid(value=answer, min_length=4, _type="text")
+			answer = args['answer']			
 			if email and username:
-				if valid_question is True and valid_answer is True:
-					# Get user from db
-					check_user = Users.query.filter_by(email=email).first()
-					# Check user account exists
-					if check_user is None:	
-						user = Users(username=username, email=email, password=password, question=question, answer=answer)
-						# Save user
-						user.save_user()
-						# Return Response
+				if question and answer:
+					valid_question = is_valid(value=question, min_length=4, _type="text")
+					valid_answer = is_valid(value=answer, min_length=4, _type="text")
+					if valid_question is True and valid_answer is True:
+						# Get user from db
+						check_user = Users.query.filter_by(email=email).first()
+						# Check user account exists
+						if check_user is None:	
+							user = Users(username=username, email=email, password=password, question=question, answer=answer)
+							# Save user
+							user.save_user()
+							# Return Response
+							response = jsonify({
+								'id': user.id,
+								'username': user.username,
+								'email': user.email,
+								'date_created': user.date_created,
+								'message': 'User account created successfuly'
+							})
+							response.status_code = 200
+							return response
 						response = jsonify({
-							'id': user.id,
-							'username': user.username,
-							'email': user.email,
-							'date_created': user.date_created,
-							'message': 'User account created successfuly'
-						})
-						response.status_code = 200
+			                'status': 'fail',
+			                'message': 'User account already exists.',
+			            })
+						response.status_code = 202
 						return response
 					response = jsonify({
-		                'status': 'fail',
-		                'message': 'User account already exists.',
-		            })
-					response.status_code = 202
-					return response
+						'status': 'fail',
+						'message': 'Invalid security question!!'
+					})
+					return make_response(response, 202)
 				response = jsonify({
 					'status': 'fail',
-					'message': 'Please set a security question!!'
+					'message': 'Please provide a security question!!'
 				})
 				return make_response(response, 202)
 			response = jsonify({
                 'status': 'fail',
                 'message': 'Email or Username can\'t be empty.',
             })
-			response.status_code = 500
-			return response
+			return make_response(response, 500)
 
 	class Login(Resource):
 
@@ -196,6 +201,59 @@ def create_app(config_name):
 					'message': 'Invalid security question, please try again!'
 				})
 				return make_response(invalid_question, 202)
+			else:
+				return user_id
+
+	class User(Resource):
+		""" This class helps manage user's information"""
+		def get(self):
+			user_id = middleware()					
+			if isinstance(user_id, int):
+				user = Users.query.filter_by(id=user_id).first()
+				response = jsonify({
+					'status': 'success',
+					'email': user.email,
+					'username': user.username
+				})
+				return make_response(response, 200)
+			else:
+				return user_id
+
+		def put(self):
+			user_id = middleware()					
+			if isinstance(user_id, int):
+				post_data = ['new_email', 'new_username', 'password']
+				for arg in range(len(post_data)):
+					parser.add_argument(post_data[arg])
+				args = parser.parse_args()
+				user = Users.query.filter_by(id=user_id).first()
+				check_password = bcrypt.check_password_hash(user.password, args['password'])
+				if check_password:					
+					new_email = args['new_email']
+					new_username = args['new_username']
+					valid_new_email = is_valid(value=new_email, min_length=5, _type="text")
+					valid_new_username = is_valid(value=new_username, min_length=5, _type="text")
+					if valid_new_username is True and valid_new_email is True:
+						user.email = new_email
+						user.username = new_username
+						user.save_user()
+						response = jsonify({
+							'status': 'success',
+							'message': 'Account information changed successfuly',
+							'new_user': new_username,
+							'new_email': new_email
+						})
+						return make_response(response, 200)
+					response = jsonify({
+						'status': 'fail',
+						'message': 'Invalid value provided!!'
+					})
+					return make_response(response, 202)
+				response = jsonify({
+					'status': 'fail',
+					'message': 'You need your password to update account info.'
+				})
+				return make_response(response, 202)
 			else:
 				return user_id
 
@@ -520,6 +578,7 @@ def create_app(config_name):
 	api.add_resource(Login, '/auth/login')
 	api.add_resource(Logout, '/auth/logout')
 	api.add_resource(ResetPassowrd, '/resetpassword')
+	api.add_resource(User, '/user')
 	api.add_resource(ShoppingListAPI, '/shoppinglists')
 	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
 	api.add_resource(ShoppingListItemsAPI, '/shoppinglist/<int:shoppinglist_id>/items', endpoint='shoppinglistitems')
