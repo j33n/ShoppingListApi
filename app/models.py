@@ -2,9 +2,10 @@ import datetime
 import jwt
 from flask import current_app
 from app.app import db
-from sqlalchemy.ext.declarative import declarative_base
+from flask_sqlalchemy import declarative_base, BaseQuery
 
 Base = declarative_base()
+
 
 class Users(db.Model):
 
@@ -30,10 +31,10 @@ class Users(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def encode_token(self, user_id):
+    def encode_token(self, user_id, time):
         """Generates the Auth Token"""
         payload = {
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=time),
             'iat': datetime.datetime.utcnow(),
             'sub': user_id
         }

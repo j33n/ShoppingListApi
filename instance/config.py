@@ -13,6 +13,8 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     BCRYPT_LOG_ROUNDS = 13
     DEBUG = False
+    POSTS_PER_PAGE = 5
+    TOKEN_EXPIRATION_TIME = 600
 
 class DevelopmentConfig(Config):
     """Development configurations"""
@@ -30,6 +32,8 @@ class TestingConfig(Config):
     DEBUG = True
     TESTING = True
     BCRYPT_LOG_ROUNDS = 4
+    POSTS_PER_PAGE = 1
+    TOKEN_EXPIRATION_TIME = 2
     SQLALCHEMY_DATABASE_URI = postgres_local_database + "{}".format('_test')
 
 class ProductionConfig(Config):

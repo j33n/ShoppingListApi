@@ -128,11 +128,11 @@ class ApiTestCase(unittest.TestCase):
 		"""Test a our middleware can't be broken"""
 		self.register_user()
 		mess_up_token = self.access_token() + "Mess up token"
-		response1 = self.client().get('/shoppinglists',
+		response1 = self.client().get('/shoppinglists/1',
 			headers=dict(Authorization=mess_up_token))
 		self.assertEqual(response1.status_code, 403)
 		self.assertIn(b"Invalid token. Please log in again.", response1.data)
-		response2 = self.client().get('/shoppinglists',
+		response2 = self.client().get('/shoppinglists/1',
 			headers=dict(Authorization=""))
 		self.assertEqual(response2.status_code, 500)
 		self.assertIn(b"Authorization is not provided", response2.data)
@@ -142,10 +142,10 @@ class ApiTestCase(unittest.TestCase):
 		self.register_user()
 		# Test empty shoppinglists
 		response1 = self.client().get(
-			'/shoppinglists',
+			'/shoppinglists/1',
 			headers=dict(Authorization=self.access_token())
 		)
-		self.assertTrue("You don't have any shoppinglists for now.", response1.data)
+		self.assertTrue("No shoppinglists found here, please add them.", response1.data)
 		self.assertEqual(200, response1.status_code)
 		# Test shoppinglists without authorization
 		response2 = self.client().post(
@@ -229,10 +229,10 @@ class ApiTestCase(unittest.TestCase):
 		)
 		self.assertEqual(response1.status_code, 201)
 		response = self.client().get(
-			'/shoppinglists',
+			'/shoppinglists/1',
 			headers=dict(Authorization=access_token)
 		)
-		self.assertEqual(response.status_code, 202)
+		self.assertEqual(response.status_code, 200)
 		self.assertIn('My favorite meal', str(response.data))
 
 	def test_fetch_single_shoppinglist(self):
@@ -251,7 +251,7 @@ class ApiTestCase(unittest.TestCase):
 			headers=dict(Authorization=access_token)
 		)
 		self.assertIn(b"My favorite meal", get_single_sl.data)
-		self.assertEqual(get_single_sl.status_code, 201)
+		self.assertEqual(get_single_sl.status_code, 200)
 
 	def test_non_existent_shoppinglist(self):
 		"""Test user can't access non existent shoppinglist"""
@@ -793,7 +793,7 @@ class ApiTestCase(unittest.TestCase):
 	def test_token_unprovided(self):
 		"""Test a token is always provided on login"""
 		self.register_user()
-		url_list_get = ['/shoppinglists', '/shoppinglist/1', '/shoppinglist/1/items', '/shoppinglist/1/item/1', '/user']
+		url_list_get = ['/shoppinglists/1', '/shoppinglist/1', '/shoppinglist/1/items', '/shoppinglist/1/item/1', '/user']
 		for url in url_list_get:
 			response = self.client().get(
 				url
@@ -854,7 +854,7 @@ class ApiTestCase(unittest.TestCase):
 		self.assertIn(b"Successfully logged out.", logout_response.data)
 		self.assertEquals(200, logout_response.status_code)
 		response = self.client().get(
-			'/shoppinglists',
+			'/shoppinglists/1',
 			headers=dict(Authorization=access_token)
 		)
 		self.assertIn(b"Token created. Please log in again.", response.data)
@@ -1014,7 +1014,6 @@ class ApiTestCase(unittest.TestCase):
 			'password': 'secret'
 			}
 		)
-		print(type(update_user_2.data.decode()))
 		self.assertIn(b"Value should be more than 5 characters", update_user_2.data)
 		self.assertIn(b"Value can\'t be numbers", update_user_2.data)
 		self.assertEquals(202, update_user_2.status_code)
@@ -1024,12 +1023,40 @@ class ApiTestCase(unittest.TestCase):
 		self.assertIn(b"johndoe@test.com", check_update.data)
 		self.assertIn(b"John Doe", check_update.data)
 
+	def test_paginated_shoppinglist(self):
+		"""Test shoppinglists can be paginated"""
+		self.register_user()
+		access_token = self.access_token()
+		no_shoppinglists = self.client().get('/shoppinglists/1', headers=dict(Authorization=access_token))
+		self.assertIn(b'No shoppinglists found here, please add them.', no_shoppinglists.data)
+		self.assertEqual(200, no_shoppinglists.status_code)
+		add_shoppinglist_1 = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertIn(b'Shopping List created successfuly', add_shoppinglist_1.data)
+		self.assertEqual(201, add_shoppinglist_1.status_code)
+		empty_page = self.client().get('/shoppinglists/2', headers=dict(Authorization=access_token))
+		print(empty_page.data)
+		self.assertIn(b'No shoppinglists found here, please add them.', empty_page.data)
+		self.assertEqual(200, empty_page.status_code)
+		page_with_shoppinglist = self.client().get('/shoppinglists/1', headers=dict(Authorization=access_token))
+		self.assertIn(b'Items to cook my favorite meal', page_with_shoppinglist.data)
+		self.assertEqual(200, page_with_shoppinglist.status_code)
+
+
+	def test_search_queries(self):
+		"""Test shoppinglists can be paginated"""
+		self.register_user()
+		access_token = self.access_token()
+		pass
 
 	def test_token_expiration(self):
 		""" Test if a token has expired after a certain time"""
 		self.register_user()
 		access_token = self.access_token()
-		time.sleep(6)
+		time.sleep(3)
 		response = self.client().post(
 			'/shoppinglists',
 			headers=dict(Authorization=access_token),

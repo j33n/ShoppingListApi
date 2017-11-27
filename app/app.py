@@ -12,6 +12,7 @@ from instance.config import app_config
 # initialize sql-alchemy
 db = SQLAlchemy()
 
+
 JWT_SECRET = 'secret'
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_SECONDS = 20
@@ -25,6 +26,8 @@ def create_app(config_name):
 	bcrypt = Bcrypt(app)
 	app.config.from_object(app_config[config_name])
 	app.config.from_pyfile('config.py')
+	token_expiration = app.config['TOKEN_EXPIRATION_TIME']
+	per_page = app.config['POSTS_PER_PAGE']
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	db.init_app(app)
 
@@ -125,7 +128,7 @@ def create_app(config_name):
 			user = Users.query.filter_by(email=email).first()
 			if user is not None and bcrypt.check_password_hash(
                 user.password, password):
-				token = user.encode_token(user.id)
+				token = user.encode_token(user.id, token_expiration)
 				response = {
 					'id': user.id,
                     'message': 'Successfully logged in.',
@@ -266,13 +269,15 @@ def create_app(config_name):
 
 		
 	class ShoppingListAPI(Resource):
+		"""This class will manage paginations on shoppinglists"""
 
-		def get(self):
-			user_id = middleware()					
-			if isinstance(user_id, int):				
+		def get(self, page):
+			user_id = middleware()
+			if isinstance(user_id, int):
 				shoppinglists = ShoppingList.query.filter_by(owner_id=user_id)
+				paginated_shoppinglists = shoppinglists.paginate(page, per_page, False)
 				results = []
-				for shoppinglist in shoppinglists:
+				for shoppinglist in paginated_shoppinglists.items:
 					obj = {
 						'id': shoppinglist.id,
                         'title': shoppinglist.title,
@@ -284,14 +289,15 @@ def create_app(config_name):
 					results.append(obj)
 				if len(results) == 0:
 					response = {
-						'message': "You don't have any shoppinglists for now."
+						'message': "No shoppinglists found here, please add them."
 					}
 					return response, 200
 				response = jsonify(results)
-				response.status_code = 202
+				response.status_code = 200
 				return response
 			else:
 				return user_id
+
 		def post(self):
 			user_id = middleware()					
 			if isinstance(user_id, int):
@@ -328,6 +334,7 @@ def create_app(config_name):
 			else:
 				return user_id
 
+
 	class SingleShoppingListAPI(Resource):	
 
 		def get(self, shoppinglist_id):
@@ -342,7 +349,7 @@ def create_app(config_name):
 						'description': shoppinglist.description,
 						'status': 'success'
 					}
-					return response, 201
+					return response, 200
 				response = {
 					'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
 				}
@@ -579,14 +586,32 @@ def create_app(config_name):
 				return response, 202
 			else:
 				return user_id
+
+	@app.errorhandler(404)
+	def page_not_found(e):
+		response = jsonify({
+			'status':'fail',
+			'message': 'Not Found: The thing you was looking for is not here!'
+			})
+
+		return make_response(response, 404)
+
+	@app.errorhandler(500)
+	def internal_server_error(e):
+		response = jsonify({
+			'status':'fail',
+			'message': 'Internal Server Error: There was a programming error or the server is overloaded!'
+			})
+
+		return make_response(response, 404)
 	
 	api.add_resource(Home, '/')
 	api.add_resource(Register, '/auth/register')
 	api.add_resource(Login, '/auth/login')
 	api.add_resource(Logout, '/auth/logout')
 	api.add_resource(ResetPassowrd, '/resetpassword')
-	api.add_resource(User, '/user')
-	api.add_resource(ShoppingListAPI, '/shoppinglists')
+	api.add_resource(User, '/user', endpoint='useraccounts')
+	api.add_resource(ShoppingListAPI, '/shoppinglists/<int:page>', '/shoppinglists', endpoint='shoppinglists')
 	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
 	api.add_resource(ShoppingListItemsAPI, '/shoppinglist/<int:shoppinglist_id>/items', endpoint='shoppinglistitems')
 	api.add_resource(SingleShoppingListItemAPI, '/shoppinglist/<int:shoppinglist_id>/item/<int:shoppinglistitem_id>', endpoint='singleshoppinglistitem')
