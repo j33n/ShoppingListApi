@@ -153,7 +153,7 @@ def create_app(config_name):
 						'status': 'fail',
 						'message': user_id
 					}
-					return response, 403
+					return response, 401
 				else:
 					save_used_token = UserToken(token=access_token)
 					# insert the token

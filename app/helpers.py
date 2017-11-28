@@ -11,7 +11,7 @@ def middleware():
 					'status': 'fail',
 					'message': user_id
 				}
-				return response, 403
+				return response, 401
 			return user_id
 		response = {
 			'status': 'fail',

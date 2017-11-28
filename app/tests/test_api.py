@@ -130,7 +130,7 @@ class ApiTestCase(unittest.TestCase):
 		mess_up_token = self.access_token() + "Mess up token"
 		response1 = self.client().get('/shoppinglists/1',
 			headers=dict(Authorization=mess_up_token))
-		self.assertEqual(response1.status_code, 403)
+		self.assertEqual(response1.status_code, 401)
 		self.assertIn(b"Invalid token. Please log in again.", response1.data)
 		response2 = self.client().get('/shoppinglists/1',
 			headers=dict(Authorization=""))
@@ -154,7 +154,7 @@ class ApiTestCase(unittest.TestCase):
 			data=self.shoppinglist
 		)
 		self.assertTrue('fail' in str(response2.data))
-		self.assertEqual(403, response2.status_code)
+		self.assertEqual(401, response2.status_code)
 
 		response3 = self.client().post(
 			'/shoppinglists',
@@ -868,7 +868,7 @@ class ApiTestCase(unittest.TestCase):
 			'/auth/logout',
 			headers=dict(Authorization=mess_up_token)
 		)
-		self.assertEqual(logout_response.status_code, 403)
+		self.assertEqual(logout_response.status_code, 401)
 		self.assertIn(b"Invalid token. Please log in again.", logout_response.data)
 
 	def test_question(self):
@@ -920,7 +920,7 @@ class ApiTestCase(unittest.TestCase):
 			'new_password': '123456'
 			}
 		)
-		self.assertTrue(200, chech_authorization.status_code)
+		self.assertTrue(401, chech_authorization.status_code)
 		self.assertIn(b'Invalid token. Please log in again.', chech_authorization.data)
 		# Test question can not be empty
 		invalid_security_question = self.client().post(
@@ -1062,6 +1062,11 @@ class ApiTestCase(unittest.TestCase):
 		not_found_search = self.client().get('/search/q=random_search', headers=dict(Authorization=access_token))
 		self.assertEqual(200, not_found_search.status_code)
 		self.assertIn(b'Item not found!!', not_found_search.data)
+		# test unauthorized searches are not allowed
+		mess_up_token = access_token + "Mess up token"
+		chech_authorization = self.client().get('/search/q=meal', headers=dict(Authorization=mess_up_token))
+		self.assertTrue(401, chech_authorization.status_code)
+		self.assertIn(b'Invalid token. Please log in again.', chech_authorization.data)
 		
 	def test_404_page(self):
 		"""Test pages that raises 404 error gets a correct message"""
