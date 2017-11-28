@@ -342,14 +342,14 @@ def create_app(config_name):
 			if isinstance(user_id, int):
 				shoppinglist = ShoppingList.query.filter_by(id=shoppinglist_id).first()
 				if shoppinglist:
-					response = {
+					response = jsonify({
 						'id': shoppinglist.id,
 						'owner': shoppinglist.owner_id,
 						'title': shoppinglist.title,
 						'description': shoppinglist.description,
 						'status': 'success'
-					}
-					return response, 200
+					})
+					return make_response(response, 200)
 				response = {
 					'message': 'Requested value \'{}\' was not found'.format(shoppinglist_id)
 				}
@@ -587,20 +587,43 @@ def create_app(config_name):
 			else:
 				return user_id
 
+	class SearchQuery(Resource):
+		"""Implement search through items"""
+		def get(self, search_query):
+			user_id = middleware()
+			if isinstance(user_id, int):
+				search_results = ShoppingList.query.filter(ShoppingList.title.like('%'+search_query+'%')).all()
+				results = []
+				for shoppinglist in search_results:
+					obj = {
+						'id': shoppinglist.id,
+                        'title': shoppinglist.title,
+                        'description': shoppinglist.description,
+                        'date_created': shoppinglist.date_created,
+                        'date_modified': shoppinglist.date_modified,
+                        'owner_id': shoppinglist.owner_id
+                    }
+					results.append(obj)
+				if results == []:
+					response = jsonify({
+						'status': 'fail',
+						'message': 'Item not found!!'
+					})
+					return make_response(response, 200)
+				response = jsonify({
+					'status': 'success',
+					'search_results': results
+					})
+				return make_response(response, 200)
+			else:
+				return user_id
+
+
 	@app.errorhandler(404)
 	def page_not_found(e):
 		response = jsonify({
 			'status':'fail',
-			'message': 'Not Found: The thing you was looking for is not here!'
-			})
-
-		return make_response(response, 404)
-
-	@app.errorhandler(500)
-	def internal_server_error(e):
-		response = jsonify({
-			'status':'fail',
-			'message': 'Internal Server Error: There was a programming error or the server is overloaded!'
+			'message': 'Page Not Found!!'
 			})
 
 		return make_response(response, 404)
@@ -611,6 +634,7 @@ def create_app(config_name):
 	api.add_resource(Logout, '/auth/logout')
 	api.add_resource(ResetPassowrd, '/resetpassword')
 	api.add_resource(User, '/user', endpoint='useraccounts')
+	api.add_resource(SearchQuery, '/search/q=<search_query>', endpoint='searchquery')
 	api.add_resource(ShoppingListAPI, '/shoppinglists/<int:page>', '/shoppinglists', endpoint='shoppinglists')
 	api.add_resource(SingleShoppingListAPI, '/shoppinglist/<int:shoppinglist_id>', endpoint='shoppinglist')
 	api.add_resource(ShoppingListItemsAPI, '/shoppinglist/<int:shoppinglist_id>/items', endpoint='shoppinglistitems')

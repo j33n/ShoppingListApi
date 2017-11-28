@@ -1038,22 +1038,39 @@ class ApiTestCase(unittest.TestCase):
 		self.assertIn(b'Shopping List created successfuly', add_shoppinglist_1.data)
 		self.assertEqual(201, add_shoppinglist_1.status_code)
 		empty_page = self.client().get('/shoppinglists/2', headers=dict(Authorization=access_token))
-		print(empty_page.data)
 		self.assertIn(b'No shoppinglists found here, please add them.', empty_page.data)
 		self.assertEqual(200, empty_page.status_code)
 		page_with_shoppinglist = self.client().get('/shoppinglists/1', headers=dict(Authorization=access_token))
 		self.assertIn(b'Items to cook my favorite meal', page_with_shoppinglist.data)
 		self.assertEqual(200, page_with_shoppinglist.status_code)
 
-
 	def test_search_queries(self):
 		"""Test shoppinglists can be paginated"""
 		self.register_user()
 		access_token = self.access_token()
-		pass
+		add_shoppinglist = self.client().post(
+			'/shoppinglists',
+			headers=dict(Authorization=access_token),
+			data=self.shoppinglist
+		)
+		self.assertEqual(201, add_shoppinglist.status_code)
+		self.assertIn(b'Shopping List created successfuly', add_shoppinglist.data)
+		response = self.client().get('/search/q=meal', headers=dict(Authorization=access_token))
+		self.assertEqual(200, response.status_code)
+		self.assertIn(b'search_results', response.data)
+		self.assertIn(b'Items to cook my favorite meal', response.data)
+		not_found_search = self.client().get('/search/q=random_search', headers=dict(Authorization=access_token))
+		self.assertEqual(200, not_found_search.status_code)
+		self.assertIn(b'Item not found!!', not_found_search.data)
+		
+	def test_404_page(self):
+		"""Test pages that raises 404 error gets a correct message"""
+		response_404 = self.client().get('/this_is_a_404_page')
+		self.assertEqual(404, response_404.status_code)
+		self.assertIn(b'Page Not Found!!', response_404.data)
 
 	def test_token_expiration(self):
-		""" Test if a token has expired after a certain time"""
+		"""Test if a token has expired after a certain time"""
 		self.register_user()
 		access_token = self.access_token()
 		time.sleep(3)
