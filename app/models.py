@@ -34,7 +34,10 @@ class Users(db.Model):
     def encode_token(self, user_id, time):
         """Generates the Auth Token"""
         payload = {
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=time),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(
+                days=0,
+                seconds=time
+            ),
             'iat': datetime.datetime.utcnow(),
             'sub': user_id
         }
@@ -62,6 +65,7 @@ class Users(db.Model):
     def __repr__(self):
         return '<username {}'.format(self.username)
 
+
 class UserToken(db.Model):
     """
     User Token Model for storing JWT tokens
@@ -74,7 +78,7 @@ class UserToken(db.Model):
 
     def __init__(self, token):
         self.token = token
-        self.created_on = datetime.datetime.now()    
+        self.created_on = datetime.datetime.now()
 
     @staticmethod
     def check_token(auth_token):
@@ -87,6 +91,7 @@ class UserToken(db.Model):
 
     def __repr__(self):
         return '<token: {}'.format(self.token)
+
 
 class ShoppingList(db.Model):
     """Model for Shopping Lists"""
@@ -117,6 +122,7 @@ class ShoppingList(db.Model):
     def __repr__(self):
         return '<title {}'.format(self.title)
 
+
 class ShoppingListItem(db.Model):
     """Model for Shopping Lists"""
     __tablename__ = 'shoppinglistitems'
@@ -131,7 +137,13 @@ class ShoppingListItem(db.Model):
         db.DateTime, default=db.func.current_timestamp(),
         onupdate=db.func.current_timestamp())
 
-    def __init__(self, owner_id, shoppinglist_id, item_title, item_description):
+    def __init__(
+        self,
+        owner_id,
+        shoppinglist_id,
+        item_title,
+        item_description
+    ):
         self.owner_id = owner_id
         self.shoppinglist_id = shoppinglist_id
         self.item_title = item_title

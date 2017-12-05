@@ -18,6 +18,8 @@ manager.add_command('db', MigrateCommand)
 
 # define our command for testing called "test"
 # Usage: python manage.py test
+
+
 @manager.command
 def test():
     """Runs the unit tests without test coverage."""
@@ -28,4 +30,4 @@ def test():
     return 1
 
 if __name__ == '__main__':
-	manager.run()
+    manager.run()
