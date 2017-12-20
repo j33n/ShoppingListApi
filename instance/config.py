@@ -12,6 +12,7 @@ class Config(object):
     SECRET_KEY = os.getenv('SECRET')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     BCRYPT_LOG_ROUNDS = 13
+    URL_PREFIX = '/api'
     DEBUG = False
     POSTS_PER_PAGE = 5
     TOKEN_EXPIRATION_TIME = 600

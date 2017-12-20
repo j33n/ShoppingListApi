@@ -1,7 +1,8 @@
+"""This module runs our app"""
 import os
 from flasgger import Swagger
 
-from app.app import create_app
+from api import create_app
 # Get the configuration name 
 config_name = os.getenv('APP_SETTINGS')
 app = create_app(config_name)

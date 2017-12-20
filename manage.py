@@ -2,8 +2,8 @@ import os
 import unittest
 from flask_script import Manager  # class for handling a set of commands
 from flask_migrate import Migrate, MigrateCommand
-from app.app import db, create_app
-from app import models
+from api import db, create_app
+from api import models
 
 # initialize the app with all its configurations
 app = create_app(config_name=os.getenv('APP_SETTINGS'))
@@ -23,7 +23,7 @@ manager.add_command('db', MigrateCommand)
 @manager.command
 def test():
     """Runs the unit tests without test coverage."""
-    tests = unittest.TestLoader().discover('./app/tests', pattern='test*.py')
+    tests = unittest.TestLoader().discover('./api/tests', pattern='test*.py')
     result = unittest.TextTestRunner(verbosity=2).run(tests)
     if result.wasSuccessful():
         return 0

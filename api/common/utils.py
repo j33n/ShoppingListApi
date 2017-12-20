@@ -3,7 +3,7 @@ from functools import wraps
 
 from flask import request
 from flask_restful import reqparse
-from app.models import Users
+from api.models import Users
 
 
 def authenticate(func):

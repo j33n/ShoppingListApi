@@ -2,8 +2,8 @@ import unittest
 import os
 import json
 from flask import Flask
-from app.app import create_app, db
-from app.models import Users, ShoppingList, ShoppingListItem, UserToken
+from api import create_app, db
+from api.models import Users, ShoppingList, ShoppingListItem, UserToken
 
 
 class ModelsTestCase(unittest.TestCase):

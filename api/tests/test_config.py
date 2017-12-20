@@ -1,6 +1,6 @@
 import unittest
 from flask import current_app
-from app.app import create_app, db
+from api import create_app, db
 
 
 class TestDevelopmentConfig(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestDevelopmentConfig(unittest.TestCase):
         self.assertTrue(app.config['DEVELOPMENT'] is True)
         self.assertTrue(app.config['TESTING'] is False)
         with app.app_context():
-            self.assertEqual(current_app.name, 'app.app')
+            self.assertEqual(current_app.name, 'api')
         self.assertFalse(
             app.config['SECRET_KEY'] == "my_precious"
         )
