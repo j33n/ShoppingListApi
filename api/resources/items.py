@@ -10,11 +10,6 @@ class ShoppingListItemsAPI(Resource):
     def get(self, user_id, shoppinglist_id):
         shoppinglistitems = ShoppingListItem.query.filter_by(
             shoppinglist_id=shoppinglist_id, owner_id=user_id)
-        if shoppinglistitems is None:
-            return abort(
-                500,
-                description="The shopping list requested is invalid"
-            )
         results = []
         for shoppinglistitem in shoppinglistitems:
             obj = {
@@ -146,11 +141,6 @@ class SingleShoppingListItemAPI(Resource):
                     item_id=shoppinglistitem_id,
                     shoppinglist_id=shoppinglist_id
                 ).first()
-                if shoppinglistitem is None:
-                    return abort(
-                        500,
-                        description="The shopping list requested is invalid"
-                    )
                 shoppinglistitem.item_title = item_title
                 shoppinglistitem.item_description = item_description
                 shoppinglistitem.save_shoppinglistitem()

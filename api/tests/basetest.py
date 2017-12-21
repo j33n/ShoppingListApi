@@ -70,6 +70,13 @@ class TestBase(unittest.TestCase):
             data=self.shoppinglistitem
         )
 
+    def logout_user(self):
+        """Helper to logout a user on"""
+        return self.client().post(
+            '/api/v1/auth/logout',
+            headers=dict(Authorization=self.access_token())
+        )
+
     def tearDown(self):
         """teardown all initialized variables."""
         with self.app.app_context():

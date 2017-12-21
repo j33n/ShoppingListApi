@@ -92,11 +92,10 @@ class ShoppinglistTestCase(TestBase):
     def test_fetch_all_shoppinglists(self):
         """Test user is able to display all shopping lists"""
         self.register_user()
-        access_token = self.access_token()
         self.create_shoppinglist()
         response = self.client().get(
             '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token)
+            headers=dict(Authorization=self.access_token())
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn('my favorite meal', str(response.data))
@@ -104,11 +103,10 @@ class ShoppinglistTestCase(TestBase):
     def test_fetch_shoppinglist(self):
         """Test user is able to display shopping lists"""
         self.register_user()
-        access_token = self.access_token()
         self.create_shoppinglist()
         get_single_sl = self.client().get(
             '/api/v1/shoppinglists?page=1&per_page=1',
-            headers=dict(Authorization=access_token)
+            headers=dict(Authorization=self.access_token())
         )
         self.assertIn(b"my favorite meal", get_single_sl.data)
         self.assertEqual(get_single_sl.status_code, 200)
@@ -116,10 +114,9 @@ class ShoppinglistTestCase(TestBase):
     def test_non_existent_shoppinglist(self):
         """Test user can't access non existent shoppinglist"""
         self.register_user()
-        access_token = self.access_token()
         response = self.client().get(
             '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token)
+            headers=dict(Authorization=self.access_token())
         )
         self.assertIn(b"Requested value '1' was not found", response.data)
         self.assertEqual(response.status_code, 500)
@@ -127,11 +124,10 @@ class ShoppinglistTestCase(TestBase):
     def test_update_shoppinglist(self):
         """Test a user can update a shopping list"""
         self.register_user()
-        access_token = self.access_token()
         self.create_shoppinglist()
         update_resp = self.client().put(
             '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token),
+            headers=dict(Authorization=self.access_token()),
             data={
                 'title': "My favorite shoes",
                 'description': 'Converse and Jordan 2015'
@@ -144,11 +140,10 @@ class ShoppinglistTestCase(TestBase):
     def test_update_duplication(self):
         """ Test put_url can not take an existing name"""
         self.register_user()
-        access_token = self.access_token()
         self.create_shoppinglist()
         duplicate_update = self.client().put(
             '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token),
+            headers=dict(Authorization=self.access_token()),
             data=self.shoppinglist
         )
         self.assertTrue(
@@ -160,10 +155,9 @@ class ShoppinglistTestCase(TestBase):
     def test_updatewith_numbers(self):
         """ Test invalid use of data on PUT"""
         self.register_user()
-        access_token = self.access_token()
         digit_update = self.client().put(
             '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token),
+            headers=dict(Authorization=self.access_token()),
             data={
                 'title': "666",
                 'description': 'Converse and Jordan 2016'
@@ -173,30 +167,13 @@ class ShoppinglistTestCase(TestBase):
                       digit_update.data)
         self.assertEqual(400, digit_update.status_code)
 
-    def test_short_shoppinglists(self):
-        """ Test a user can not create short shoppinglists"""
-        self.register_user()
-        access_token = self.access_token()
-        short_update = self.client().put(
-            '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token),
-            data={
-                'title': 'Fish',
-                'description': 'Converse and Jordan 2016'
-            }
-        )
-        self.assertIn(b"Your title should be more than 6 characters",
-                      short_update.data)
-        self.assertEqual(400, short_update.status_code)
-
     def test_delete_shoppinglist(self):
         """Test a user can delete a shopping list"""
         self.register_user()
-        access_token = self.access_token()
         self.create_shoppinglist()
         delete_resp = self.client().delete(
             '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token)
+            headers=dict(Authorization=self.access_token())
         )
         self.assertIn(
             b"Shopping List \'my favorite meal\' deleted successfuly",
@@ -207,11 +184,97 @@ class ShoppinglistTestCase(TestBase):
     def test_invalid_deletion(self):
         """Test delete non existing value"""
         self.register_user()
-        access_token = self.access_token()
         invalid_deletion = self.client().delete(
             '/api/v1/shoppinglists/1',
-            headers=dict(Authorization=access_token)
+            headers=dict(Authorization=self.access_token())
         )
         self.assertIn(b"The shopping list requested is invalid",
                       invalid_deletion.data)
         self.assertEqual(500, invalid_deletion.status_code)
+
+    def test_invalid_updates(self):
+        """Test put non existing value"""
+        self.register_user()
+        invalid_update = self.client().put(
+            '/api/v1/shoppinglists/1',
+            headers=dict(Authorization=self.access_token()),
+            data={
+                'title': "Groceries",
+                'description': 'Flour and stuff'
+            }
+        )
+        self.assertIn(b"The shopping list requested is invalid",
+                      invalid_update.data)
+        self.assertEqual(500, invalid_update.status_code)
+
+    def test_spaced_pagination(self):
+        """Test pagination with spaces"""
+        self.register_user()
+        response = self.client().get(
+            '/api/v1/shoppinglists?page=0&per_page=1',
+            headers=dict(
+                Authorization=self.access_token())
+        )
+        self.assertIn(
+            b'Page and per page should be more than 0',
+            response.data
+        )
+        self.assertEqual(400, response.status_code)
+
+    def test_pagination_format(self):
+        """Test pagination with spaces"""
+        self.register_user()
+        response = self.client().get(
+            '/api/v1/shoppinglists?page=page',
+            headers=dict(
+                Authorization=self.access_token())
+        )
+        self.assertIn(
+            b'Page and per page should be integers',
+            response.data
+        )
+        self.assertEqual(400, response.status_code)
+
+    def test_search_query(self):
+        """Ensure user can search shoppinglists"""
+        self.register_user()
+        self.create_shoppinglist()
+        response = self.client().get(
+            '/api/v1/search?q=meal',
+            headers=dict(
+                Authorization=self.access_token())
+        )
+        self.assertIn(
+            b'my favorite meal',
+            response.data
+        )
+        self.assertEqual(200, response.status_code)
+
+    def test_empty_keywords(self):
+        """Ensure user can't search with empty keywords'"""
+        self.register_user()
+        self.create_shoppinglist()
+        response = self.client().get(
+            '/api/v1/search?q=',
+            headers=dict(
+                Authorization=self.access_token())
+        )
+        self.assertIn(
+            b'Please provide a search keyword',
+            response.data
+        )
+        self.assertEqual(400, response.status_code)
+    def test_unexisting_item(self):
+        """Ensure user can't search for non existing items'"""
+        self.register_user()
+        self.create_shoppinglist()
+        response = self.client().get(
+            '/api/v1/search?q=Lorem',
+            headers=dict(
+                Authorization=self.access_token())
+        )
+        self.assertIn(
+            b'Item not found!!',
+            response.data
+        )
+        self.assertEqual(200, response.status_code)

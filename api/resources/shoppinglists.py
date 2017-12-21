@@ -103,25 +103,17 @@ class SingleShoppingListAPI(Resource):
 
     def get(self, user_id, shoppinglist_id):
         """Fetch all items on a shoppinglist"""
-        check_sl = ShoppingList.query.filter_by(
+        shoppinglist = ShoppingList.query.filter_by(
             id=shoppinglist_id, owner_id=user_id).first()
-        if check_sl:
-            shoppinglist = ShoppingList.query.filter_by(
-                id=shoppinglist_id, owner_id=user_id).first()
-            if shoppinglist:
-                response = jsonify({
-                    'id': shoppinglist.id,
-                    'owner': shoppinglist.owner_id,
-                    'title': shoppinglist.title,
-                    'description': shoppinglist.description,
-                    'status': 'success'
-                })
-                return make_response(response, 200)
-            response = {
-                "message":
-                "Requested value \'{}\' was not found".format(shoppinglist_id)
-            }
-            return response, 500
+        if shoppinglist:
+            response = jsonify({
+                'id': shoppinglist.id,
+                'owner': shoppinglist.owner_id,
+                'title': shoppinglist.title,
+                'description': shoppinglist.description,
+                'status': 'success'
+            })
+            return make_response(response, 200)
         response = {
             "message":
             "Requested value \'{}\' was not found".format(shoppinglist_id)

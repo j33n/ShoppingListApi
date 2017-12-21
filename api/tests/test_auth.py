@@ -1,6 +1,8 @@
 """
 This module contains all the test suite for Authentication
 """
+import time
+
 from api.tests.basetest import TestBase
 
 class AUTHTestCase(TestBase):
@@ -36,6 +38,19 @@ class AUTHTestCase(TestBase):
             'answer': 'Monster'
         })
         self.assertIn(b'Your username has special characters that are not allowed', response.data)
+        self.assertEqual(400, response.status_code)
+
+    def test_invalid_question(self):
+        """A question requires a question mark"""
+        response = self.client().post('/api/v1/auth/register', data={
+            'username': 'Stallion',
+            'email': 'rocky@test.com',
+            'password': 'secret',
+            'confirm_password': 'secret',
+            'question': '         ',
+            'answer': 'Rocky Balboa'
+        })
+        self.assertIn(b'Your question is not valid', response.data)
         self.assertEqual(400, response.status_code)
 
     def test_password_mismatch(self):
@@ -88,16 +103,25 @@ class AUTHTestCase(TestBase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("token", str(response.data))
 
-    def test_invalid_credentials(self):
-        """Test invalid credentials rejection"""
+    def test_invalid_email(self):
+        """Test invalid email format"""
         self.register_user()
-        self.login_user()
-        wrong_cred_login = self.client().post('/api/v1/auth/login', data={
+        wrong_email = self.client().post('/api/v1/auth/login', data={
             'email': 'Stallion',
             'password': 'secret'
         })
+        self.assertEqual(wrong_email.status_code, 400)
+        self.assertIn("Your email is not valid", str(wrong_email.data))
+
+    def test_invalid_credentials(self):
+        """Test invalid credentials rejection"""
+        self.register_user()
+        wrong_cred_login = self.client().post('/api/v1/auth/login', data={
+            'email': 'Stallion@test.fr',
+            'password': 'secret'
+        })
         self.assertEqual(wrong_cred_login.status_code, 400)
-        self.assertIn("Your email is not valid", str(wrong_cred_login.data))
+        self.assertIn("Invalid credentials", str(wrong_cred_login.data))
 
     def test_invalid_middleware(self):
         """Test a our middleware can't be broken"""
@@ -117,3 +141,16 @@ class AUTHTestCase(TestBase):
                                       headers=dict(Authorization=""))
         self.assertEqual(response2.status_code, 500)
         self.assertIn(b"Authorization is not provided", response2.data)
+
+    def test_token_expiration(self):
+        """Test if a token has expired after a certain time"""
+        self.register_user()
+        access_token = self.access_token()
+        time.sleep(3)
+        response = self.client().post(
+            '/api/v1/shoppinglists',
+            headers=dict(Authorization=access_token),
+            data=self.shoppinglist
+        )
+        self.assertIn(
+            b"Signature expired. Please log in again.", response.data)
