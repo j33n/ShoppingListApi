@@ -5,8 +5,8 @@ from flask import request
 from flask_restful import reqparse
 from api.models import Users
 
-
 def authenticate(func):
+    # This function is an authentication decorator
     @wraps(func)
     def wrapper(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
@@ -14,6 +14,7 @@ def authenticate(func):
             access_token = auth_header.split(" ")[1]
             user_id = Users.decode_token(access_token)
             if not isinstance(user_id, int):
+                # Return a valid response when Auth fails
                 response = {
                     'status': 'fail',
                     'message': user_id
@@ -74,8 +75,8 @@ def validate(*values):
 
 def parser(form_data):
     """Helper function that parses the data from user"""
-    # Get data to parse from the form
     post_data = form_data
+    # Get data to parse from the form
     parser = reqparse.RequestParser()
     for arg in range(len(post_data)):
         parser.add_argument(post_data[arg])

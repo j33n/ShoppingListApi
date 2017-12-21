@@ -77,6 +77,7 @@ class Login(Resource):
 
     def post(self):
         args = parser(['email', 'password'])
+        # Check if values are valid
         invalid = validate(args)
         if invalid:
             response = jsonify({
@@ -87,9 +88,11 @@ class Login(Resource):
         email = args['email'].lower()
         password = args['password']
         user = Users.query.filter_by(email=email).first()
+        # Check user and password match
         if user is not None and bcrypt.check_password_hash(
                 user.password, password):
             token = user.encode_token(user.id, current_app.config['TOKEN_EXPIRATION_TIME'])
+            # Return token to the user
             response = {
                 'id': user.id,
                 'message': 'Successfully logged in.',
@@ -109,8 +112,9 @@ class Logout(Resource):
     def post(self, user_id):
         auth_header = request.headers.get('Authorization')
         access_token = auth_header.split(" ")[1]
+        # Save used token to the DB, a token is used once only
         save_used_token = UserToken(token=access_token)
-        # insert the token
+        # Insert the token
         db.session.add(save_used_token)
         db.session.commit()
         responseObject = {

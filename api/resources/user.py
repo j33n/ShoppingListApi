@@ -13,6 +13,7 @@ class ResetPassword(Resource):
         # Get data posted
         args = parser(
             ['question', 'answer', 'old_password', 'new_password'])
+        # Validate arguments
         invalid = validate(args)
         if invalid:
             response = jsonify({
@@ -21,14 +22,18 @@ class ResetPassword(Resource):
             })
             return make_response(response, 400)
         user = Users.query.filter_by(id=user_id).first()
+        # Check if question and answer matches
         if user.question == args['question'].lower() \
                 and user.answer == args['answer'].lower():
+            # Check old password is the same as what we have
             check_old_password = bcrypt.check_password_hash(
                 user.password, args['old_password'])
             if check_old_password:
+                # Create new password
                 make_new_password = bcrypt.generate_password_hash(
                     args['new_password'],
                     current_app.config.get('BCRYPT_LOG_ROUNDS')).decode('utf-8')
+                # Save new password
                 user.password = make_new_password
                 user.save_user()
                 invalid_old_password = jsonify({
@@ -52,6 +57,7 @@ class User(Resource):
     method_decorators = [authenticate]
 
     def get(self, user_id):
+        """Return  a user's information"""
         user = Users.query.filter_by(id=user_id).first()
         response = jsonify({
             'status': 'success',
@@ -61,6 +67,7 @@ class User(Resource):
         return make_response(response, 200)
 
     def put(self, user_id):
+        """Edit account information"""
         args = parser(['new_email', 'new_username', 'password'])
         invalid = validate(args)
         if invalid:

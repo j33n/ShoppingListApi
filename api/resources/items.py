@@ -8,6 +8,7 @@ class ShoppingListItemsAPI(Resource):
     method_decorators = [authenticate]
 
     def get(self, user_id, shoppinglist_id):
+        """Fetch items on a shoppinglist"""
         shoppinglistitems = ShoppingListItem.query.filter_by(
             shoppinglist_id=shoppinglist_id, owner_id=user_id)
         results = []
@@ -33,6 +34,7 @@ class ShoppingListItemsAPI(Resource):
         return response
 
     def post(self, user_id, shoppinglist_id):
+        """This endpoint creates a new item"""
         check_sl = ShoppingList.query.filter_by(
             id=shoppinglist_id, owner_id=user_id).first()
         if check_sl:
@@ -48,6 +50,7 @@ class ShoppingListItemsAPI(Resource):
 
             item_title = args['item_title'].lower()
             item_description = args['item_description']
+            # Check our item doesn't exist
             check_exists = ShoppingListItem.query.filter_by(
                 item_title=item_title, owner_id=user_id).first()
             if check_exists is None:

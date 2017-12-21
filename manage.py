@@ -1,10 +1,3 @@
-### Feedback ###
-# Deploy to heroku
-# Document Api
-# Clean Up
-# Edit commits
-# Enhance test coverage
-
 import os
 import unittest
 from flask_script import Manager  # class for handling a set of commands

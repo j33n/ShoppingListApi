@@ -70,7 +70,9 @@ class AUTHTestCase(TestBase):
         """Test a user is not missing out a password"""
         response = self.client().post('/api/v1/auth/register', data={
             'username': 'Stallion',
-            'email': 'rocky@test.com'
+            'email': 'rocky@test.com',
+            'question': 'What is your pet name?',
+            'answer': 'Monster'
         })
         self.assertEqual(response.status_code, 400)
         self.assertIn("Password is required", str(response.data))
