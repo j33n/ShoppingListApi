@@ -101,6 +101,7 @@ with coverage
 | /v1/auth/shoppinglists/<list_id>/items/<item_id> |   GET   |  User view an item in a shoppinglist  | TRUE           |
 | /v1/auth/shoppinglists/<list_id>/items/<item_id> |   PUT   |  User Edit an item in a shoppinglist  | TRUE           |
 | /v1/auth/shoppinglists/<list_id>/items/<item_id> | DELETE  | User delete an item in a shoppinglist | TRUE           |
+| /v1/auth/search?page=<page_number>&per_page=<items_perpage> | GET  | User search through shoppinglists | TRUE           |
 ## Credits
 [Jean Abayo](https://github.com/JeanAbayo)
 ## License
