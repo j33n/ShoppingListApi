@@ -80,7 +80,7 @@ python manage.py db upgrade
 
 with coverage
 
-`coverage run --source=app -m py.test && coverage report`
+`coverage run --source=api -m py.test && coverage report`
 
 ### Run our app
 
@@ -89,18 +89,18 @@ with coverage
 ## Endpoints
 | Resource URL                           | Methods |              Description              | Requires Token |
 | -------------------------------------- | :-----: | :-----------------------------------: | -------------- |
-| /auth/register                         |  POST   |           User Registration           | FALSE          |
-| /auth/login                            |  POST   |             User Sign in              | FALSE          |
-| /shoppinglists                         |  POST   |      User create a shoppinglist       | TRUE           |
-| /shoppinglists                         |   GET   |    User can view all shoppinglists    | TRUE           |
-| /shoppinglist/<list_id>                |   GET   |    User view a single shoppinglist    | TRUE           |
-| /shoppinglist/<list_id>                |   PUT   |    User Edit a single shoppinglist    | TRUE           |
-| /shoppinglist/<list_id>                | DELETE  |   User Delete a single shoppinglist   | TRUE           |
-| /shoppinglist/<list_id>/items          |  POST   |   User create item in shoppinglist    | TRUE           |
-| /shoppinglist/<list_id>/items          |   GET   |   User list items in a shoppinglist   | TRUE           |
-| /shoppinglist/<list_id>/item/<item_id> |   GET   |  User view an item in a shoppinglist  | TRUE           |
-| /shoppinglist/<list_id>/item/<item_id> |   PUT   |  User Edit an item in a shoppinglist  | TRUE           |
-| /shoppinglist/<list_id>/item/<item_id> | DELETE  | User delete an item in a shoppinglist | TRUE           |
+| /v1/auth/auth/register                         |  POST   |           User Registration           | FALSE          |
+| /v1/auth/auth/login                            |  POST   |             User Sign in              | FALSE          |
+| /v1/auth/shoppinglists                         |  POST   |      User create a shoppinglist       | TRUE           |
+| /v1/auth/shoppinglists                         |   GET   |    User can view all shoppinglists    | TRUE           |
+| /v1/auth/shoppinglists/<list_id>                |   GET   |    User view a single shoppinglist    | TRUE           |
+| /v1/auth/shoppinglists/<list_id>                |   PUT   |    User Edit a single shoppinglist    | TRUE           |
+| /v1/auth/shoppinglists/<list_id>                | DELETE  |   User Delete a single shoppinglist   | TRUE           |
+| /v1/auth/shoppinglists/<list_id>/items          |  POST   |   User create item in shoppinglist    | TRUE           |
+| /v1/auth/shoppinglists/<list_id>/items          |   GET   |   User list items in a shoppinglist   | TRUE           |
+| /v1/auth/shoppinglists/<list_id>/items/<item_id> |   GET   |  User view an item in a shoppinglist  | TRUE           |
+| /v1/auth/shoppinglists/<list_id>/items/<item_id> |   PUT   |  User Edit an item in a shoppinglist  | TRUE           |
+| /v1/auth/shoppinglists/<list_id>/items/<item_id> | DELETE  | User delete an item in a shoppinglist | TRUE           |
 ## Credits
 [Jean Abayo](https://github.com/JeanAbayo)
 ## License

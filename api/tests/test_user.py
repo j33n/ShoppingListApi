@@ -31,7 +31,7 @@ class UserTestCase(TestBase):
         self.register_user()
         self.logout_user()
         resp = self.client().get(
-            '/api/v1/shoppinglists/1',
+            '/api/v1/shoppinglists',
             headers=dict(Authorization=self.access_token())
         )
         self.assertIn(b"Token created. Please log in again.", resp.data)

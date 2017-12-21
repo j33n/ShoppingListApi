@@ -21,10 +21,12 @@ class AUTHTestCase(TestBase):
             'username': 'Stallion',
             'email': 'rocky@test.com',
             'password': 'secret',
-            'confirm_password': 'secret'
+            'confirm_password': 'secret',
+            'question': 'What is your favorite pet name?'
         })
+        print(check_security_question.data)
         self.assertEqual(check_security_question.status_code, 400)
-        self.assertIn("Question is required", str(
+        self.assertIn("Answer is required", str(
             check_security_question.data))
 
     def test_special_chars_denial(self):
