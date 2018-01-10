@@ -15,7 +15,7 @@ class Config(object):
     URL_PREFIX = '/api'
     DEBUG = False
     POSTS_PER_PAGE = 5
-    TOKEN_EXPIRATION_TIME = 600
+    TOKEN_EXPIRATION_TIME = 6000
 
 class DevelopmentConfig(Config):
     """Development configurations"""

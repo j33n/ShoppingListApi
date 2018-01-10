@@ -2,6 +2,7 @@ from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 
 # local imports
 from instance.config import app_config
@@ -21,6 +22,7 @@ def create_app(config_name):
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	db.init_app(app)
 	bcrypt.init_app(app)
+	CORS(app)
 
 	app.register_blueprint(
         api_v1_bp,

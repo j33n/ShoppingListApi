@@ -195,7 +195,7 @@ class SearchQuery(Resource):
             })
             return make_response(response, 400)
         search_results = ShoppingList.query.filter(ShoppingList.title.like(
-            '%'+search_query+'%')).filter_by(owner_id=user_id).all()
+            '%'+search_query.lower()+'%')).filter_by(owner_id=user_id).all()
         results = []
         for shoppinglist in search_results:
             obj = {

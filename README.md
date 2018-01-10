@@ -7,7 +7,7 @@ ShoppingListApi
 
 An api to make shopping quick, easy and fun by organizing and keeping track of your lists
 
-The api can be accessed [here](myshoppinglistapi.herokuapp.com) and the documentation [here](http://myshoppinglistapi.herokuapp.com/apidocs)
+The api can be accessed [here](myshoppinglistapi.herokuapp.com/api/v1) and the documentation [here](http://myshoppinglistapi.herokuapp.com/apidocs)
 
 ## Prerequisites
 
