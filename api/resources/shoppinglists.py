@@ -33,7 +33,7 @@ class ShoppingListAPI(Resource):
                     'message': "Page and per page should be more than 0"
                 }
                 return response, 400
-            shoppinglists = ShoppingList.query.filter_by(owner_id=user_id)
+            shoppinglists = ShoppingList.query.filter_by(owner_id=user_id).order_by("id desc")
             # Perform fetch with pagination
             paginated_shoppinglists = shoppinglists.paginate(
                 int(page), int(per_page), False)
