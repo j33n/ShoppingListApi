@@ -134,33 +134,34 @@ class SingleShoppingListAPI(Resource):
         description = args['description']
         title_exists = ShoppingList.query.filter_by(
             owner_id=user_id, title=title, id=shoppinglist_id).first()
-        if not title_exists:
-            shoppinglist = ShoppingList.query.filter_by(
-                owner_id=user_id, id=shoppinglist_id).first()
-            if shoppinglist is None:
-                return abort(
-                    500,
-                    description="The shopping list requested is invalid"
-                )
-            shoppinglist.title = title
-            shoppinglist.description = description
-            shoppinglist.save_shoppinglist()
-
-            # Return Response
+        if title_exists and title_exists.id != shoppinglist_id:
             response = {
-                'id': shoppinglist.id,
-                'owner': shoppinglist.owner_id,
-                'title': shoppinglist.title,
-                'description': shoppinglist.description,
-                'message': 'Shopping List updated successfuly',
-                'status': 'success'
+                'status': "fail",
+                'message': 'Shopping List {} already exists'.format(title)
             }
-            return response, 200
+            return response, 400
+        shoppinglist = ShoppingList.query.filter_by(
+            owner_id=user_id, id=shoppinglist_id).first()
+        if shoppinglist is None:
+            return abort(
+                500,
+                description="The shopping list requested is invalid"
+            )
+        shoppinglist.title = title
+        shoppinglist.description = description
+        shoppinglist.save_shoppinglist()
+
+        # Return Response
         response = {
-            'status': "fail",
-            'message': 'Shopping List {} already exists'.format(title)
+            'id': shoppinglist.id,
+            'owner': shoppinglist.owner_id,
+            'title': shoppinglist.title,
+            'description': shoppinglist.description,
+            'message': 'Shopping List updated successfuly',
+            'status': 'success'
         }
-        return response, 400
+        return response, 200
+        
 
     def delete(self, user_id, shoppinglist_id):
         """This function deletes an item"""
