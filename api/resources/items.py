@@ -53,31 +53,31 @@ class ShoppingListItemsAPI(Resource):
             # Check our item doesn't exist
             check_exists = ShoppingListItem.query.filter_by(
                 item_title=item_title, owner_id=user_id).first()
-            if check_exists is None:
-                shoppinglistitem = ShoppingListItem(
-                    item_title=item_title,
-                    item_description=item_description,
-                    shoppinglist_id=shoppinglist_id,
-                    owner_id=user_id
-                )
-                shoppinglistitem.save_shoppinglistitem()
-                # Return Response
+            if check_exists:
                 response = {
-                    'item_id': shoppinglistitem.item_id,
-                    'owner_id': shoppinglistitem.owner_id,
-                    'shoppinglist_id': shoppinglistitem.shoppinglist_id,
-                    'item_title': shoppinglistitem.item_title,
-                    'item_description': shoppinglistitem.item_description,
                     'message':
-                    'Shopping list item {} created successfuly'.format(
-                        item_title)
+                    'Shopping List item {} already exists'.format(item_title)
                 }
-                return response, 200
+                return response, 400
+            shoppinglistitem = ShoppingListItem(
+                item_title=item_title,
+                item_description=item_description,
+                shoppinglist_id=shoppinglist_id,
+                owner_id=user_id
+            )
+            shoppinglistitem.save_shoppinglistitem()
+            # Return Response
             response = {
+                'item_id': shoppinglistitem.item_id,
+                'owner_id': shoppinglistitem.owner_id,
+                'shoppinglist_id': shoppinglistitem.shoppinglist_id,
+                'item_title': shoppinglistitem.item_title,
+                'item_description': shoppinglistitem.item_description,
                 'message':
-                'Shopping List item {} already exists'.format(item_title)
+                'Shopping list item {} created successfuly'.format(
+                    item_title)
             }
-            return response, 400
+            return response, 200
         response = {
             'message':
             'Requested value \'{}\' was not found'.format(
