@@ -13,9 +13,13 @@ class ShoppingListAPI(Resource):
         args = parser(['page', 'per_page'])
         page = args['page']
         per_page = args['per_page']
+        results = []
+        shoppinglists = {}
+        pagination = {}
+        all_lists = []
+
         if page and per_page is None or page and per_page == '':
             per_page = "5"
-        
         if page and per_page and page != '':
             # Check that our page and per_page are valid integers
             validate_page = page.isdigit()
@@ -33,16 +37,25 @@ class ShoppingListAPI(Resource):
                     'message': "Page and per page should be more than 0"
                 }
                 return response, 400
-            shoppinglists = ShoppingList.query.filter_by(owner_id=user_id).order_by("id desc")
+            all_shoppinglists = ShoppingList.query.filter_by(owner_id=user_id).order_by("id desc")
             # Perform fetch with pagination
-            paginated_shoppinglists = shoppinglists.paginate(
+            paginated_shoppinglists = all_shoppinglists.paginate(
                 int(page), int(per_page), False)
             get_shoppinglists = paginated_shoppinglists.items
+            # Add paginating helpers
+            pagination['pagination'] = {
+                'has_next': paginated_shoppinglists.has_next,
+                'has_prev': paginated_shoppinglists.has_prev,
+                'prev_page_number': paginated_shoppinglists.prev_num,
+                'next_page_number': paginated_shoppinglists.next_num,
+                'total_items': paginated_shoppinglists.total,
+                'number_of_pages': paginated_shoppinglists.pages,
+            }
         else:
             # Perform a fetch all non-paginated
             paginated_shoppinglists = ShoppingList.query.filter_by(owner_id=user_id).all()
             get_shoppinglists = paginated_shoppinglists
-        results = []
+
         for shoppinglist in get_shoppinglists:
             obj = {
                 'id': shoppinglist.id,
@@ -52,13 +65,16 @@ class ShoppingListAPI(Resource):
                 'date_modified': shoppinglist.date_modified,
                 'owner_id': shoppinglist.owner_id
             }
-            results.append(obj)
+            all_lists.append(obj)
         # Check if we don't have any shoppinglists
-        if len(results) == 0:
+        if len(all_lists) == 0:
             response = {
                 'message': "No shoppinglists found here, please add them."
             }
             return response, 200
+        shoppinglists['shoppinglists'] = all_lists
+        results.append(shoppinglists)
+        results.append(pagination)
         response = jsonify(results)
         response.status_code = 200
         return response

@@ -136,7 +136,7 @@ class ShoppingListItem(db.Model):
     item_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('shoppinglists.id'))
     shoppinglist_id = db.Column(db.Integer, nullable=False)
-    item_title = db.Column(db.String(100), nullable=False, unique=True)
+    item_title = db.Column(db.String(100), nullable=False)
     item_description = db.Column(db.String(150), nullable=False)
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
     date_modified = db.Column(

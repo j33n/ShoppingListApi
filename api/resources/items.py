@@ -138,29 +138,29 @@ class SingleShoppingListItemAPI(Resource):
 
             check_exists = ShoppingListItem.query.filter_by(
                 item_title=item_title, owner_id=user_id).first()
-            if check_exists is None:
-                shoppinglistitem = ShoppingListItem.query.filter_by(
-                    owner_id=user_id,
-                    item_id=shoppinglistitem_id,
-                    shoppinglist_id=shoppinglist_id
-                ).first()
-                shoppinglistitem.item_title = item_title
-                shoppinglistitem.item_description = item_description
-                shoppinglistitem.save_shoppinglistitem()
-                # Return Response
+            if check_exists and check_exists.item_id != shoppinglistitem_id:
                 response = {
-                    'item_id': shoppinglistitem.item_id,
-                    'item_title': shoppinglistitem.item_title,
-                    'item_description': shoppinglistitem.item_description,
-                    'message': 'Shopping list item updated successfuly'
+                    'message':
+                    'Shopping list item {} already exists'.format(item_title),
+                    'status': 'fail'
                 }
-                return response, 200
+                return response, 400
+            shoppinglistitem = ShoppingListItem.query.filter_by(
+                owner_id=user_id,
+                item_id=shoppinglistitem_id,
+                shoppinglist_id=shoppinglist_id
+            ).first()
+            shoppinglistitem.item_title = item_title
+            shoppinglistitem.item_description = item_description
+            shoppinglistitem.save_shoppinglistitem()
+            # Return Response
             response = {
-                'message':
-                'Shopping list item {} already exists'.format(item_title),
-                'status': 'fail'
+                'item_id': shoppinglistitem.item_id,
+                'item_title': shoppinglistitem.item_title,
+                'item_description': shoppinglistitem.item_description,
+                'message': 'Shopping list item updated successfuly'
             }
-            return response, 400
+            return response, 200            
         response = {
             'message':
             'Requested value \'{}\' was not found'.format(
