@@ -83,18 +83,30 @@ class User(Resource):
         if check_password:
             new_email = args['new_email'].lower()
             new_username = args['new_username']
+            # Check email is not taken
+            check_email_exists = Users.query.filter_by(email=new_email).first()
+            if check_email_exists:
+                if check_email_exists.id != user_id:
+                    response = jsonify({
+                        'status': 'fail',
+                        'message': 'Email already taken',
+                        'username': new_username,
+                        'email': new_email
+                    })
+                    return make_response(response, 400)
             user.email = new_email
             user.username = new_username
             user.save_user()
             response = jsonify({
                 'status': 'success',
                 'message': 'Account information changed successfuly',
-                'new_user': new_username,
-                'new_email': new_email
+                'username': new_username,
+                'email': new_email
             })
             return make_response(response, 200)
+
         response = jsonify({
             'status': 'fail',
-            'message': 'You need your password to update account info.'
+            'message': 'We need your password to update account info.'
         })
         return make_response(response, 400)
