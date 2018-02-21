@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from flask import jsonify, make_response, abort
 from api.common.utils import validate, parser, authenticate
-from api.models import ShoppingList
+from api.models import ShoppingList, ShoppingListItem
 
 
 class ShoppingListAPI(Resource):
@@ -26,18 +26,19 @@ class ShoppingListAPI(Resource):
             validate_per_page = per_page.isdigit()
             if not validate_page or not validate_per_page:
                 response = {
-                    'status':'fail',
+                    'status': 'fail',
                     'message': "Page and per page should be integers"
                 }
                 return response, 400
             # Check that our page and per_page are not 0 or less
             elif int(page) <= 0 or int(per_page) <= 0:
                 response = {
-                    'status':'fail',
+                    'status': 'fail',
                     'message': "Page and per page should be more than 0"
                 }
                 return response, 400
-            all_shoppinglists = ShoppingList.query.filter_by(owner_id=user_id).order_by("id desc")
+            all_shoppinglists = ShoppingList.query.filter_by(
+                owner_id=user_id).order_by("id desc")
             # Perform fetch with pagination
             paginated_shoppinglists = all_shoppinglists.paginate(
                 int(page), int(per_page), False)
@@ -53,7 +54,8 @@ class ShoppingListAPI(Resource):
             }
         else:
             # Perform a fetch all non-paginated
-            paginated_shoppinglists = ShoppingList.query.filter_by(owner_id=user_id).all()
+            paginated_shoppinglists = ShoppingList.query.filter_by(
+                owner_id=user_id).all()
             get_shoppinglists = paginated_shoppinglists
 
         for shoppinglist in get_shoppinglists:
@@ -113,6 +115,7 @@ class ShoppingListAPI(Resource):
             'message': 'Shopping List {} already exists'.format(title)
         }
         return response, 400
+
 
 class SingleShoppingListAPI(Resource):
     method_decorators = [authenticate]
@@ -177,7 +180,6 @@ class SingleShoppingListAPI(Resource):
             'status': 'success'
         }
         return response, 200
-        
 
     def delete(self, user_id, shoppinglist_id):
         """This function deletes an item"""
@@ -196,6 +198,7 @@ class SingleShoppingListAPI(Resource):
                 shoppinglist.title)
         }
         return response, 200
+
 
 class SearchQuery(Resource):
     """Implement search through items"""
@@ -228,6 +231,49 @@ class SearchQuery(Resource):
             response = jsonify({
                 'status': 'fail',
                 'message': 'Item not found!!'
+            })
+            return make_response(response, 200)
+        response = jsonify({
+            'status': 'success',
+            'search_results': results
+        })
+        return make_response(response, 200)
+
+
+class SearchItemsQuery(Resource):
+    """Implement search through items"""
+    method_decorators = [authenticate]
+
+    def get(self, user_id, shoppinglist_id):
+        """Get endpoint to search through items"""
+        args = parser(['q'])
+        search_query = args['q']
+        if not search_query:
+            response = jsonify({
+                'status': 'fail',
+                'message': "Please provide a search keyword"
+            })
+            return make_response(response, 400)
+        search_results = ShoppingListItem.query.filter(
+            ShoppingListItem.item_title.like(
+                '%'+search_query.lower()+'%')).filter_by(
+            owner_id=user_id, shoppinglist_id=shoppinglist_id).all()
+        results = []
+        for item in search_results:
+            obj = {
+                'item_id': item.item_id,
+                'item_title': item.item_title,
+                'item_description': item.item_description,
+                'date_created': item.date_created,
+                'date_modified': item.date_modified,
+                'shoppinglist_id': item.shoppinglist_id,
+                'owner_id': item.owner_id
+            }
+            results.append(obj)
+        if results == []:
+            response = jsonify({
+                'status': 'fail',
+                'message': 'Shoppinglist item not found!!'
             })
             return make_response(response, 200)
         response = jsonify({

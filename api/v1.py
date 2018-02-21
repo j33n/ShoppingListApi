@@ -9,7 +9,7 @@ from flask_restful import Api
 from .resources.auth import Home
 from .resources.auth import Register, Login, Logout
 from .resources.items import ShoppingListItemsAPI, SingleShoppingListItemAPI
-from .resources.shoppinglists import ShoppingListAPI, SingleShoppingListAPI, SearchQuery
+from .resources.shoppinglists import ShoppingListAPI, SingleShoppingListAPI, SearchQuery, SearchItemsQuery
 from .resources.user import ResetPassword, User
 
 API_VERSION_V1 = 1
@@ -26,6 +26,9 @@ api.add_resource(ResetPassword, '/resetpassword', endpoint='resetpassword')
 api.add_resource(User, '/user', endpoint='useraccounts')
 api.add_resource(SearchQuery, '/search',
                  endpoint='searchquery')
+api.add_resource(SearchItemsQuery, '/search/<int:shoppinglist_id>',
+                 endpoint='searchitemquery')
+
 api.add_resource(
     ShoppingListAPI,
     '/shoppinglists',
