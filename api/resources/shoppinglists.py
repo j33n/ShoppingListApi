@@ -97,7 +97,7 @@ class ShoppingListAPI(Resource):
         title = args['title'].lower()
         description = args['description']
         # Check a shoppinglist exists
-        check_exists = ShoppingList.query.filter_by(title=title).first()
+        check_exists = ShoppingList.query.filter_by(title=title, owner_id=user_id).first()
         if check_exists is None:
             shoppinglist = ShoppingList(
                 title=title, description=description, owner_id=user_id)

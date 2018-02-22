@@ -99,7 +99,7 @@ class ShoppingList(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    title = db.Column(db.String(100), unique=True)
+    title = db.Column(db.String(100))
     description = db.Column(db.String(150))
     items = db.relationship(
         'ShoppingListItem', backref='creator', lazy='dynamic',
